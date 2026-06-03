@@ -8,7 +8,8 @@ API_KEY = os.getenv("DATA_GO_KR_API_KEY", "")
 if not API_KEY:
     try:
         import streamlit as st
-        API_KEY = st.secrets.get("DATA_GO_KR_API_KEY", "")
+        if hasattr(st, "secrets") and "DATA_GO_KR_API_KEY" in st.secrets:
+            API_KEY = st.secrets["DATA_GO_KR_API_KEY"]
     except Exception:
         pass
 

@@ -153,74 +153,119 @@ if not API_KEY or API_KEY == "YOUR_API_KEY_HERE":
     )
     st.stop()
 
-render_sidebar_filters()
-
-# --- 히어로 ---
+# --- 온보딩: 조건 설정 먼저 ---
 st.markdown("""
 <div class="hero-section">
-    <h1>Seoul Apartment Analytics</h1>
-    <p>서울 25개 구 아파트 매매/전월세 실거래가 분석 대시보드</p>
+    <h1>APT Alpha</h1>
+    <p>서울 아파트 실거래가 분석</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.info("사이드바에서 **지역 / 기간 / 면적대**를 설정한 뒤, 왼쪽 메뉴에서 분석 페이지를 선택하세요.")
+from datetime import datetime, timedelta
+from config import SEOUL_GU_CODES, AREA_CATEGORIES
 
-# --- 페이지 안내 카드 ---
-c1, c2, c3 = st.columns(3)
+st.markdown("### 분석 조건 설정")
+st.caption("아래에서 조건을 설정하면 모든 분석 페이지에 자동 적용됩니다.")
 
-with c1:
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">01</span>
-        <h4>가격 추이 분석</h4>
-        <p>구별 월별 실거래가 / m2당 가격<br>상승률 랭킹, 변동성 히트맵</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">04</span>
-        <h4>전월세 분석</h4>
-        <p>전세가율 추이, 매매 vs 전세 매트릭스<br>보증금 인상률, 계약 유형</p>
-    </div>
-    """, unsafe_allow_html=True)
+# 1. 관심 구 선택
+gu_names = list(SEOUL_GU_CODES.values())
+selected_gus = st.multiselect(
+    "관심 지역",
+    gu_names,
+    default=st.session_state.get("selected_gus", ["강남구", "서초구"]),
+    key="home_gus",
+)
 
-with c2:
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">02</span>
-        <h4>서울 구별 지도</h4>
-        <p>25개 구 Choropleth<br>5개 지표 리치 툴팁</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">05</span>
-        <h4>아파트 단지 분석</h4>
-        <p>구/동/단지 드릴다운<br>매매-전세 갭, 층수 프리미엄</p>
-    </div>
-    """, unsafe_allow_html=True)
+# 2. 기간 설정
+today = datetime.today()
+last_month = today.replace(day=1) - timedelta(days=1)
+cur_year = today.year
+year_range = list(range(2020, cur_year + 1))
+month_range = list(range(1, 13))
 
-with c3:
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">03</span>
-        <h4>가격 예측</h4>
-        <p>GBM 머신러닝 예측<br>민감도 분석, 시나리오 비교</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div class="feature-card">
-        <span class="card-number">06-07</span>
-        <h4>단지 랭킹 / LTV</h4>
-        <p>상승/하락 Top N, 전고점 낙폭<br>대출 시뮬레이션, 레버리지 ROI</p>
-    </div>
-    """, unsafe_allow_html=True)
+def _parse_ym(ym_str, fy, fm):
+    try:
+        return int(ym_str[:4]), int(ym_str[4:6])
+    except (ValueError, IndexError):
+        return fy, fm
+
+default_start = f"{last_month.year - 1}{last_month.month:02d}"
+default_end = last_month.strftime("%Y%m")
+def_sy, def_sm = _parse_ym(st.session_state.get("start_ym", default_start), cur_year - 1, 1)
+def_ey, def_em = _parse_ym(st.session_state.get("end_ym", default_end), cur_year, today.month)
+
+st.caption("분석 기간")
+pc1, pc2, pc3, pc4 = st.columns(4)
+start_year = pc1.selectbox("시작년", year_range,
+    index=year_range.index(def_sy) if def_sy in year_range else 0,
+    key="home_sy", label_visibility="collapsed", format_func=lambda y: f"{y}년")
+start_month = pc2.selectbox("시작월", month_range,
+    index=month_range.index(def_sm) if def_sm in month_range else 0,
+    key="home_sm", label_visibility="collapsed", format_func=lambda m: f"{m}월")
+end_year = pc3.selectbox("종료년", year_range,
+    index=year_range.index(def_ey) if def_ey in year_range else len(year_range) - 1,
+    key="home_ey", label_visibility="collapsed", format_func=lambda y: f"{y}년")
+end_month = pc4.selectbox("종료월", month_range,
+    index=month_range.index(def_em) if def_em in month_range else 0,
+    key="home_em", label_visibility="collapsed", format_func=lambda m: f"{m}월")
+
+start_ym = f"{start_year}{start_month:02d}"
+end_ym = f"{end_year}{end_month:02d}"
+if start_ym > end_ym:
+    st.warning("시작이 종료보다 늦습니다.")
+
+# 3. 면적대 + 연식
+fc1, fc2 = st.columns(2)
+area_options = ["전체"] + list(AREA_CATEGORIES.keys())
+selected_area = fc1.selectbox("면적대", area_options,
+    index=area_options.index(st.session_state.get("selected_area", "전체"))
+    if st.session_state.get("selected_area", "전체") in area_options else 0,
+    key="home_area")
+
+from sidebar_filters import _build_year_options
+build_year_options = _build_year_options()
+selected_build_year = fc2.selectbox("연식", build_year_options,
+    index=build_year_options.index(st.session_state.get("selected_build_year", "전체"))
+    if st.session_state.get("selected_build_year", "전체") in build_year_options else 0,
+    key="home_build")
+
+# session_state 업데이트 (사이드바에 자동 반영)
+st.session_state["selected_gus"] = selected_gus
+st.session_state["start_ym"] = start_ym
+st.session_state["end_ym"] = end_ym
+st.session_state["selected_area"] = selected_area
+st.session_state["selected_build_year"] = selected_build_year
+
+# 사이드바도 렌더 (다른 페이지와 동기화)
+render_sidebar_filters()
 
 st.divider()
 
-with st.expander("데이터 출처 및 분석 기준"):
-    e1, e2 = st.columns(2)
-    with e1:
-        st.markdown("**데이터**: 국토교통부 실거래가 API / 매매+전월세")
-    with e2:
-        st.markdown("**기준**: 전용면적(m2), 중위값(Median), 구+월 캐싱")
+# 4. 안내
+if not selected_gus:
+    st.info("위에서 관심 지역을 선택하세요.")
+else:
+    gu_text = ", ".join(selected_gus)
+    st.success(f"**{gu_text}** / {start_year}.{start_month}~{end_year}.{end_month} / {selected_area} / {selected_build_year}")
+    st.markdown("왼쪽 메뉴에서 분석 페이지를 선택하세요.")
+
+    # 간단 안내 카드
+    st.markdown("### 분석 메뉴")
+    m1, m2 = st.columns(2)
+    with m1:
+        st.markdown("""
+        - **가격 추이** — 구별 시세 흐름
+        - **구별 지도** — 25개 구 비교
+        - **가격 예측** — ML 기반 예측
+        - **전월세** — 전세가율 분석
+        - **단지 분석** — 개별 단지 상세
+        """)
+    with m2:
+        st.markdown("""
+        - **단지 랭킹** — 상승/하락 Top N
+        - **대출 시뮬레이터** — LTV/ROI
+        - **심층 분석** — STL/리스크/비교
+        - **알파 분석** — 팩터 분해
+        - **스크리닝** — 퀀트 스코어링
+        - **비교** — 단지간 추이 비교
+        """)

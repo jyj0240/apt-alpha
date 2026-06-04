@@ -99,11 +99,12 @@ if not trade_raw.empty:
         last_avg = ratio_df[ratio_df["ym"] == last_ym]["jeonse_ratio"].mean()
         jeonse_ratio_change = last_avg - first_avg
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("전세 비중", f"{jeonse_ratio_val:.0f}%")
-col2.metric("평균 전세가율", f"{avg_jeonse_ratio:.1f}%" if avg_jeonse_ratio else "N/A")
-col3.metric("전세가율 변화", f"{jeonse_ratio_change:+.1f}%p" if jeonse_ratio_change else "N/A")
-col4.metric("면적당 월세(중위)", f"{wolse_per_area:.1f}만원/m2" if wolse_per_area else "N/A")
+rr1 = st.columns(2)
+rr1[0].metric("전세 비중", f"{jeonse_ratio_val:.0f}%")
+rr1[1].metric("평균 전세가율", f"{avg_jeonse_ratio:.1f}%" if avg_jeonse_ratio else "N/A")
+rr2 = st.columns(2)
+rr2[0].metric("전세가율 변화", f"{jeonse_ratio_change:+.1f}%p" if jeonse_ratio_change else "N/A")
+rr2[1].metric("월세 중위", f"{wolse_per_area:.1f}만원/m2" if wolse_per_area else "N/A")
 
 st.divider()
 

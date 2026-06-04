@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="서울 아파트 가격 분석",
     page_icon="",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # --- 반응형 CSS ---
@@ -118,15 +118,27 @@ hr { border-color: #e2e8f0 !important; margin: 1.5rem 0 !important; }
     .block-container { padding: 1rem 1.5rem !important; }
 }
 
-/* === 반응형: 모바일 === */
+/* === 반응형: 모바일 (iPhone 375~430px) === */
 @media (max-width: 640px) {
-    .block-container { padding: 0.75rem 1rem !important; }
-    [data-testid="stMetricValue"] { font-size: 0.95rem !important; }
-    [data-testid="stMetricLabel"] { font-size: 0.65rem !important; }
-    .hero-section { padding: 16px 12px; }
-    .hero-section h1 { font-size: 1.2rem !important; }
-    h1 { font-size: 1.2rem !important; }
-    h2 { font-size: 1.05rem !important; }
+    .block-container { padding: 0.5rem 0.6rem !important; }
+    [data-testid="stMetric"] { padding: 8px 10px !important; }
+    [data-testid="stMetricValue"] { font-size: 1rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.62rem !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.58rem !important; }
+    .stTabs [data-baseweb="tab-list"] { gap: 2px; padding: 2px; }
+    .stTabs [data-baseweb="tab"] { padding: 5px 8px; font-size: 0.68rem; }
+    h1 { font-size: 1.05rem !important; }
+    h2 { font-size: 0.88rem !important; }
+    h3 { font-size: 0.82rem !important; }
+    p, li, span, label, .stMarkdown { font-size: 0.78rem !important; }
+    .hero-section { padding: 12px 10px; margin-bottom: 8px; }
+    .hero-section h1 { font-size: 1rem !important; }
+    .hero-section p { font-size: 0.72rem !important; }
+    .feature-card { padding: 10px; margin-bottom: 6px; }
+    .feature-card h4 { font-size: 0.82rem; margin-bottom: 4px; }
+    .feature-card p { font-size: 0.7rem !important; }
+    [data-testid="stDataFrame"] { font-size: 0.7rem; }
+    hr { margin: 0.6rem 0 !important; }
 }
 </style>
 """, unsafe_allow_html=True)

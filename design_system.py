@@ -59,7 +59,7 @@ CHART_LAYOUT = dict(
     plot_bgcolor=COLORS["surface"],
     font=dict(color=COLORS["text_primary"], size=12),
     legend=dict(bgcolor="rgba(255,255,255,0.9)"),
-    margin=dict(l=50, r=20, t=50, b=50),
+    margin=dict(l=30, r=10, t=35, b=35),
 )
 
 

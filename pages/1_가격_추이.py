@@ -90,11 +90,12 @@ premium_val = premium_val.iloc[0] if not premium_val.empty else 0.0
 vol_val = vol_df.loc[vol_df["gu_name"] == primary_gu, "volatility"]
 vol_val = vol_val.iloc[0] if not vol_val.empty else 0.0
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("총 거래 건수", f"{len(df):,}건")
-col2.metric(f"기간 상승률 ({primary_gu})", f"{change_val:+.1f}%")
-col3.metric("최근 3개월 모멘텀", f"{momentum_val:+.1f}%")
-col4.metric("서울 평균 대비", f"{premium_val:+.1f}%")
+kr1 = st.columns(2)
+kr1[0].metric("총 거래 건수", f"{len(df):,}건")
+kr1[1].metric(f"기간 상승률 ({primary_gu})", f"{change_val:+.1f}%")
+kr2 = st.columns(2)
+kr2[0].metric("최근 3개월 모멘텀", f"{momentum_val:+.1f}%")
+kr2[1].metric("서울 평균 대비", f"{premium_val:+.1f}%")
 
 # --- 자동 인사이트 (상단 배치) ---
 st.markdown("<br>", unsafe_allow_html=True)

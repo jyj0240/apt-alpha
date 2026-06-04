@@ -66,27 +66,24 @@ if df.empty:
     st.stop()
 
 # --- 단지 선택 ---
-sel = st.columns(4)
-
-with sel[0]:
+ds1 = st.columns(2)
+with ds1[0]:
     gu_options = sorted(df["gu_name"].dropna().unique())
     selected_gu = st.selectbox("구", gu_options, key="deep_gu")
-
 df_gu = df[df["gu_name"] == selected_gu]
 
-with sel[1]:
+with ds1[1]:
     dong_options = ["전체"] + sorted(df_gu["dong"].dropna().unique())
     selected_dong = st.selectbox("동", dong_options, key="deep_dong")
-
 df_dong = df_gu if selected_dong == "전체" else df_gu[df_gu["dong"] == selected_dong]
 
-with sel[2]:
+ds2 = st.columns(2)
+with ds2[0]:
     apt_counts = df_dong["apt_name"].value_counts()
     selected_apt = st.selectbox("단지", apt_counts.index.tolist(), key="deep_apt")
-
 df_apt_all = df_dong[df_dong["apt_name"] == selected_apt]
 
-with sel[3]:
+with ds2[1]:
     if not df_apt_all.empty:
         areas = df_apt_all["area"].dropna().round(0).astype(int)
         area_counts = areas.value_counts().sort_index()
@@ -173,7 +170,7 @@ with tab1:
         fig.add_hline(y=0, line_dash="dash", line_color="#cbd5e1", row=4, col=1)
 
         fig.update_layout(
-            height=700, showlegend=False,
+            height=520, showlegend=False,
             margin=dict(l=50, r=20, t=40, b=30),
         )
         apply_theme(fig)
@@ -499,7 +496,7 @@ with tab4:
             polar=dict(radialaxis=dict(visible=True, range=[0, 100], tickfont=dict(size=10))),
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=-0.15),
-            height=400,
+            height=350,
             margin=dict(l=60, r=60, t=30, b=30),
         )
         st.plotly_chart(fig_radar, use_container_width=True, key="chart_radar")

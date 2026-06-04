@@ -61,28 +61,25 @@ if df.empty:
     st.stop()
 
 # --- 1단계: 구 → 동 → 단지 → 면적 선택 ---
-sel_row1 = st.columns(4)
-
-with sel_row1[0]:
+sr1 = st.columns(2)
+with sr1[0]:
     gu_options = sorted(df["gu_name"].dropna().unique())
-    selected_gu = st.selectbox("구 선택", gu_options)
-
+    selected_gu = st.selectbox("구", gu_options)
 df_gu = df[df["gu_name"] == selected_gu]
 
-with sel_row1[1]:
+with sr1[1]:
     dong_options = ["전체"] + sorted(df_gu["dong"].dropna().unique())
-    selected_dong = st.selectbox("동 선택", dong_options)
-
+    selected_dong = st.selectbox("동", dong_options)
 df_dong = df_gu if selected_dong == "전체" else df_gu[df_gu["dong"] == selected_dong]
 
-with sel_row1[2]:
+sr2 = st.columns(2)
+with sr2[0]:
     apt_counts = df_dong["apt_name"].value_counts()
     apt_options = apt_counts.index.tolist()
-    selected_apt = st.selectbox("단지 선택", apt_options)
-
+    selected_apt = st.selectbox("단지", apt_options)
 df_apt_all = df_dong[df_dong["apt_name"] == selected_apt]
 
-with sel_row1[3]:
+with sr2[1]:
     # 해당 단지의 실제 전용면적 목록 (반올림해서 그룹화)
     if not df_apt_all.empty:
         areas = df_apt_all["area"].dropna().round(0).astype(int)

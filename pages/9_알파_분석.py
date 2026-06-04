@@ -81,27 +81,24 @@ if df_gu_full.empty:
     st.stop()
 
 # --- 단지 선택 ---
-sel = st.columns(4)
-
-with sel[0]:
+as1 = st.columns(2)
+with as1[0]:
     gu_opts = sorted(df_gu_full["gu_name"].dropna().unique())
     selected_gu = st.selectbox("구", gu_opts, key="alpha_gu")
-
 df_gu = df_gu_full[df_gu_full["gu_name"] == selected_gu]
 
-with sel[1]:
+with as1[1]:
     dong_opts = ["전체"] + sorted(df_gu["dong"].dropna().unique())
     selected_dong = st.selectbox("동", dong_opts, key="alpha_dong")
-
 df_dong = df_gu if selected_dong == "전체" else df_gu[df_gu["dong"] == selected_dong]
 
-with sel[2]:
+as2 = st.columns(2)
+with as2[0]:
     apt_counts = df_dong["apt_name"].value_counts()
     selected_apt = st.selectbox("단지", apt_counts.index.tolist(), key="alpha_apt")
-
 df_apt_all = df_dong[df_dong["apt_name"] == selected_apt]
 
-with sel[3]:
+with as2[1]:
     if not df_apt_all.empty:
         areas = df_apt_all["area"].dropna().round(0).astype(int)
         area_counts = areas.value_counts().sort_index()
@@ -251,7 +248,7 @@ with tab1:
 
         fig.update_layout(
             legend=dict(orientation="h", yanchor="bottom", y=-0.3),
-            height=450,
+            height=380,
         )
         st.plotly_chart(fig, use_container_width=True, key="chart_decomp_bar")
 

@@ -45,12 +45,11 @@ if not selected_gus:
 
 # 스크리닝 파라미터
 st.subheader("스크리닝 조건")
-p1, p2, p3, p4 = st.columns(4)
-
-target_area = p1.selectbox("타겟 면적 (m2)", [59, 84, 85, 102, 114, 135], index=2,
-                           format_func=lambda x: f"{x}m2")
-area_tol = p2.selectbox("면적 허용 오차", [3, 5, 10], index=1,
-                        format_func=lambda x: f"+-{x}m2")
+sp1 = st.columns(2)
+target_area = sp1[0].selectbox("타겟 면적", [59, 84, 85, 102, 114, 135], index=2,
+                               format_func=lambda x: f"{x}m2")
+area_tol = sp1[1].selectbox("허용 오차", [3, 5, 10], index=1,
+                            format_func=lambda x: f"+-{x}m2")
 
 cur_year = datetime.today().year
 build_options = {
@@ -60,9 +59,10 @@ build_options = {
     "중축 (10~20년)": (cur_year - 20, cur_year - 10),
     "구축 (20년+)": (0, cur_year - 20),
 }
-build_filter = p3.selectbox("연식", list(build_options.keys()), index=2)
-months_mom = p4.selectbox("모멘텀 기간", [3, 6, 12], index=1,
-                          format_func=lambda x: f"최근 {x}개월")
+sp2 = st.columns(2)
+build_filter = sp2[0].selectbox("연식", list(build_options.keys()), index=2)
+months_mom = sp2[1].selectbox("모멘텀 기간", [3, 6, 12], index=1,
+                              format_func=lambda x: f"최근 {x}개월")
 
 min_trades = st.slider("최소 거래건수", min_value=3, max_value=30, value=5,
                        help="거래가 너무 적은 단지는 통계적으로 신뢰하기 어렵습니다.")

@@ -140,11 +140,12 @@ st.divider()
 
 # --- 모델 정보 (하단으로 이동) ---
 with st.expander("🛠️ 모델 성능 및 Feature 중요도 보기"):
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("MAE", f"{metrics['mae']:,.0f}만원")
-    col2.metric("R2 Score", f"{metrics['r2']:.4f}")
-    col3.metric("학습 데이터", f"{metrics['train_size']:,}건")
-    col4.metric("테스트 데이터", f"{metrics['test_size']:,}건")
+    mc1 = st.columns(2)
+    mc1[0].metric("MAE", f"{metrics['mae']:,.0f}만원")
+    mc1[1].metric("R2 Score", f"{metrics['r2']:.4f}")
+    mc2 = st.columns(2)
+    mc2[0].metric("학습 데이터", f"{metrics['train_size']:,}건")
+    mc2[1].metric("테스트 데이터", f"{metrics['test_size']:,}건")
 
     st.caption(
         f"MAE {metrics['mae']:,.0f}만원 = 평균적으로 예측값과 실제값의 차이가 약 {metrics['mae']/10000:.1f}억원 수준입니다. "

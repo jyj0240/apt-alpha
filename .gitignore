@@ -1,9 +1,7 @@
 .env
 __pycache__/
 *.pyc
-data/*.csv
 data/*.pkl
-data/cache_meta.json
 .streamlit/secrets.toml
 .claude/
 budongsan-api/

@@ -1,7 +1,7 @@
 import streamlit as st
 
 from config import API_KEY
-from sidebar_filters import render_sidebar_filters
+from sidebar_filters import render_sidebar_filters  # noqa: used in other pages
 
 st.set_page_config(
     page_title="서울 아파트 가격 분석",
@@ -376,8 +376,8 @@ selected_gus = st.session_state.get("selected_gus", [])
 selected_area = st.session_state.get("selected_area", "전체")
 selected_build_year = st.session_state.get("selected_build_year", "전체")
 
-# 사이드바 동기화
-render_sidebar_filters()
+# 홈에서는 사이드바를 렌더하지 않음 (key 충돌 방지)
+# 다른 페이지에서 render_sidebar_filters()가 session_state를 읽어감
 
 if not selected_gus:
     st.info("Step 1에서 관심 지역을 선택하세요.")

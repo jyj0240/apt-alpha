@@ -33,6 +33,10 @@ def render_sidebar_filters() -> dict:
 
         default_start, default_end = _default_yms()
 
+        # 홈에서 설정한 값을 위젯 key에 동기화 (key가 있으면 default 무시하므로)
+        if "selected_gus" in st.session_state and "sb_selected_gus" not in st.session_state:
+            st.session_state["sb_selected_gus"] = st.session_state["selected_gus"]
+
         # 지역
         gu_names = list(SEOUL_GU_CODES.values())
         selected_gus = st.multiselect(
@@ -56,6 +60,13 @@ def render_sidebar_filters() -> dict:
         prev_end = st.session_state.get("end_ym", default_end)
         def_sy, def_sm = _parse_ym(prev_start, cur_year - 1, 1)
         def_ey, def_em = _parse_ym(prev_end, cur_year, datetime.today().month)
+
+        # 홈에서 설정한 기간을 위젯 key에 동기화
+        if "sb_sy" not in st.session_state:
+            st.session_state["sb_sy"] = def_sy
+            st.session_state["sb_sm"] = def_sm
+            st.session_state["sb_ey"] = def_ey
+            st.session_state["sb_em"] = def_em
 
         st.caption("시작")
         s1, s2 = st.columns(2)
@@ -93,8 +104,13 @@ def render_sidebar_filters() -> dict:
         if start_ym > end_ym:
             st.warning("시작이 종료보다 늦습니다.")
 
-        # 면적대
+        # 면적대 — 홈에서 설정한 값 동기화
         area_options = ["전체"] + list(AREA_CATEGORIES.keys())
+        if "sb_area" not in st.session_state and "selected_area" in st.session_state:
+            home_area = st.session_state["selected_area"]
+            if home_area in area_options:
+                st.session_state["sb_area"] = home_area
+
         selected_area = st.selectbox(
             "면적대", area_options,
             index=area_options.index(st.session_state.get("selected_area", "전체"))
@@ -102,8 +118,13 @@ def render_sidebar_filters() -> dict:
             key="sb_area",
         )
 
-        # 연식
+        # 연식 — 홈에서 설정한 값 동기화
         build_year_options = _build_year_options()
+        if "sb_build" not in st.session_state and "selected_build_year" in st.session_state:
+            home_build = st.session_state["selected_build_year"]
+            if home_build in build_year_options:
+                st.session_state["sb_build"] = home_build
+
         selected_build_year = st.selectbox(
             "연식", build_year_options,
             index=build_year_options.index(

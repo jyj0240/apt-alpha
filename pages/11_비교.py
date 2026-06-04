@@ -276,6 +276,7 @@ with tab3:
             title="기간 수익률 비교",
             xaxis_title="수익률 (%)", yaxis_title="",
             height=max(200, len(ret_df) * 45),
+            xaxis_type="linear",
         )
         fig_ret.add_trace(go.Bar(
             x=ret_df["수익률(%)"], y=ret_df["단지"],

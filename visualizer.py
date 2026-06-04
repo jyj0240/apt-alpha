@@ -33,7 +33,7 @@ def price_trend_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="중위가격 (만원)",
         hovermode="x unified",
-        xaxis_tickangle=-45,
+        xaxis_tickangle=-45, xaxis_type="category",
     )
 
     for i, gu in enumerate(gu_names):
@@ -77,7 +77,7 @@ def price_per_sqm_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="m2당 가격 (만원/m2)",
         hovermode="x unified",
-        xaxis_tickangle=-45,
+        xaxis_tickangle=-45, xaxis_type="category",
     )
 
     # 선택 구 평균 참조선
@@ -136,7 +136,7 @@ def trade_volume_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="거래 건수",
         barmode="group",
-        xaxis_tickangle=-45,
+        xaxis_tickangle=-45, xaxis_type="category",
     )
 
     for i, gu in enumerate(gu_names):

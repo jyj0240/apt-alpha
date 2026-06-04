@@ -71,7 +71,6 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         zerolinecolor=COLORS["zeroline"],
         showgrid=True,
         linecolor=COLORS["axis_line"],
-        type="category",
     )
     fig.update_yaxes(
         gridcolor=COLORS["grid"],

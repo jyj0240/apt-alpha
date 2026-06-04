@@ -28,10 +28,26 @@ p, li, span, label, .stMarkdown { font-size: 0.9rem !important; }
     padding: 1rem 2rem !important;
 }
 
-/* === 사이드바 (min-width 사용 금지) === */
+/* === 사이드바 === */
 [data-testid="stSidebar"] {
     background: #f8fafc;
     border-right: 1px solid #e2e8f0;
+}
+/* 사이드바 네비게이션 메뉴 강조 */
+[data-testid="stSidebarNav"] a {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin: 2px 4px !important;
+}
+[data-testid="stSidebarNav"] a:hover {
+    background: #eff6ff !important;
+}
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: #2563eb !important;
+    color: white !important;
+    font-weight: 700 !important;
 }
 
 /* === KPI 메트릭 카드 === */
@@ -384,4 +400,25 @@ else:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("**왼쪽 메뉴에서 분석 페이지를 선택하세요.**")
+    st.markdown("")
+
+    # 바로가기 버튼 (큰 터치 타겟)
+    st.markdown('<p class="step-label">분석 시작</p>', unsafe_allow_html=True)
+
+    go1, go2 = st.columns(2)
+    if go1.button("가격 추이", key="go_trend", use_container_width=True, type="primary"):
+        st.switch_page("pages/1_가격_추이.py")
+    if go2.button("구별 지도", key="go_map", use_container_width=True):
+        st.switch_page("pages/2_구별_지도.py")
+
+    go3, go4 = st.columns(2)
+    if go3.button("단지 분석", key="go_apt", use_container_width=True):
+        st.switch_page("pages/5_단지_분석.py")
+    if go4.button("비교", key="go_compare", use_container_width=True):
+        st.switch_page("pages/11_비교.py")
+
+    go5, go6 = st.columns(2)
+    if go5.button("스크리닝", key="go_screen", use_container_width=True):
+        st.switch_page("pages/10_스크리닝.py")
+    if go6.button("알파 분석", key="go_alpha", use_container_width=True):
+        st.switch_page("pages/9_알파_분석.py")

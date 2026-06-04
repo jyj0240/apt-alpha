@@ -78,7 +78,10 @@ apt_stats["label"] = (
     apt_stats["dong"] + ", " + apt_stats["trades"].astype(str) + "건]"
 )
 
-apt_lookup = dict(zip(apt_stats["label"], apt_stats["apt_name"]))
+# lookup: label → (apt_name, gu_name, dong)
+apt_lookup = {}
+for _, row in apt_stats.iterrows():
+    apt_lookup[row["label"]] = (row["apt_name"], row["gu_name"], row["dong"])
 all_labels = apt_stats["label"].tolist()
 
 # multiselect 하나로 통합 (타이핑하면 자동 검색됨)
@@ -92,14 +95,35 @@ if not selected_labels:
     st.info("비교할 단지를 선택하세요. 단지명으로 검색할 수 있습니다.")
     st.stop()
 
-selected_apts = [apt_lookup.get(l, l.split("  [")[0].split(" [")[0]) for l in selected_labels]
+# (apt_name, gu, dong) 튜플로 정확히 식별
+selected_keys = []
+for l in selected_labels:
+    if l in apt_lookup:
+        selected_keys.append(apt_lookup[l])
+    else:
+        name = l.split(" [")[0]
+        selected_keys.append((name, "", ""))
+
+if not selected_keys:
+    st.info("비교할 단지를 선택하세요.")
+    st.stop()
 
 st.divider()
 
 # --- 선택된 단지 데이터 ---
 compare_data = {}
-for apt_name in selected_apts:
+display_names = []
+for apt_name, gu, dong in selected_keys:
+    # 구+동+단지명으로 정확히 필터
     apt_df = df_area[df_area["apt_name"] == apt_name]
+    if gu:
+        apt_df = apt_df[apt_df["gu_name"] == gu]
+    if dong:
+        apt_df = apt_df[apt_df["dong"] == dong]
+
+    display_name = f"{apt_name} ({dong})" if dong else apt_name
+    display_names.append(display_name)
+
     monthly = (
         apt_df.groupby("ym")
         .agg(
@@ -110,10 +134,8 @@ for apt_name in selected_apts:
         .reset_index()
         .sort_values("ym")
     )
-    gu = apt_df["gu_name"].iloc[0] if not apt_df.empty else ""
-    dong = apt_df["dong"].iloc[0] if not apt_df.empty else ""
     build_yr = int(apt_df["build_year"].median()) if apt_df["build_year"].notna().any() else 0
-    compare_data[apt_name] = {
+    compare_data[display_name] = {
         "monthly": monthly,
         "gu": gu,
         "dong": dong,
@@ -122,6 +144,8 @@ for apt_name in selected_apts:
         "latest_sqm": monthly["median_sqm"].iloc[-1] if not monthly.empty else 0,
         "latest_price": monthly["median_price"].iloc[-1] if not monthly.empty else 0,
     }
+
+selected_apts = display_names
 
 # --- KPI 요약 ---
 st.subheader("비교 단지 요약")

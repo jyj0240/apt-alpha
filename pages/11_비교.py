@@ -78,36 +78,14 @@ apt_stats["label"] = (
     apt_stats["dong"] + ", " + apt_stats["trades"].astype(str) + "건]"
 )
 
-# 검색 + multiselect
 apt_lookup = dict(zip(apt_stats["label"], apt_stats["apt_name"]))
 all_labels = apt_stats["label"].tolist()
 
-search_query = st.text_input(
-    "단지 검색", placeholder="단지명 입력 (예: 반포, 래미안, 그랑...)",
-    help="검색어를 입력하면 아래 목록이 필터링됩니다. 이미 선택한 단지는 유지됩니다.",
-)
-
-# 이미 선택된 항목은 검색과 무관하게 항상 옵션에 포함
-already_selected = st.session_state.get("compare_apts", [])
-
-if search_query.strip():
-    matched = apt_stats[
-        apt_stats["apt_name"].str.contains(search_query.strip(), case=False, na=False) |
-        apt_stats["dong"].str.contains(search_query.strip(), case=False, na=False)
-    ]["label"].tolist()
-    st.caption(f"'{search_query}' 검색 결과: {len(matched)}개 단지")
-else:
-    matched = all_labels
-
-# 이미 선택된 것 + 검색 결과 합치기 (순서: 선택된 것 먼저)
-combined = list(dict.fromkeys(already_selected + matched))
-
+# multiselect 하나로 통합 (타이핑하면 자동 검색됨)
 selected_labels = st.multiselect(
-    "비교할 단지 선택 (최대 8개)",
-    combined,
-    default=[s for s in already_selected if s in combined],
+    "비교할 단지 (타이핑으로 검색, 최대 8개)",
+    all_labels,
     max_selections=8,
-    key="compare_apts",
 )
 
 if not selected_labels:

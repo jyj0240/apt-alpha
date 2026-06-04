@@ -57,9 +57,17 @@ CHART_LAYOUT = dict(
     template="plotly_white",
     paper_bgcolor=COLORS["surface"],
     plot_bgcolor=COLORS["surface"],
-    font=dict(color=COLORS["text_primary"], size=12),
-    legend=dict(bgcolor="rgba(255,255,255,0.9)"),
-    margin=dict(l=30, r=10, t=35, b=35),
+    font=dict(color=COLORS["text_primary"], size=11),
+    legend=dict(
+        bgcolor="rgba(255,255,255,0.8)",
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="left",
+        x=0,
+        font=dict(size=10),
+    ),
+    margin=dict(l=45, r=8, t=40, b=30),
 )
 
 
@@ -71,12 +79,19 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         zerolinecolor=COLORS["zeroline"],
         showgrid=True,
         linecolor=COLORS["axis_line"],
+        tickfont=dict(size=9),
+        tickangle=0,
+        title_font=dict(size=10),
+        nticks=8,
     )
     fig.update_yaxes(
         gridcolor=COLORS["grid"],
         zerolinecolor=COLORS["zeroline"],
         showgrid=True,
         linecolor=COLORS["axis_line"],
+        tickfont=dict(size=9),
+        title_font=dict(size=10),
+        title_standoff=5,
     )
     return fig
 

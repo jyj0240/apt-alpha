@@ -33,7 +33,7 @@ def price_trend_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="중위가격 (만원)",
         hovermode="x unified",
-        xaxis_tickangle=-45, xaxis_type="category",
+        xaxis_type="category",
     )
 
     for i, gu in enumerate(gu_names):
@@ -54,14 +54,6 @@ def price_trend_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
             customdata=customdata,
             hovertemplate=hover_price_trend(),
         ))
-        # 마지막 포인트 레이블
-        add_last_point_label(
-            fig,
-            gu_data["ym"].tolist(),
-            gu_data["median_price"].tolist(),
-            format_price(gu_data["median_price"].iloc[-1]),
-            color=color,
-        )
 
     return fig
 
@@ -77,7 +69,7 @@ def price_per_sqm_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="m2당 가격 (만원/m2)",
         hovermode="x unified",
-        xaxis_tickangle=-45, xaxis_type="category",
+        xaxis_type="category",
     )
 
     # 선택 구 평균 참조선
@@ -110,13 +102,6 @@ def price_per_sqm_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
             customdata=customdata,
             hovertemplate=hover_sqm_trend(),
         ))
-        add_last_point_label(
-            fig,
-            gu_data["ym"].tolist(),
-            gu_data["median_price_per_sqm"].tolist(),
-            format_sqm_price(gu_data["median_price_per_sqm"].iloc[-1]),
-            color=color,
-        )
 
     return fig
 
@@ -136,7 +121,7 @@ def trade_volume_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         xaxis_title="년월",
         yaxis_title="거래 건수",
         barmode="group",
-        xaxis_tickangle=-45, xaxis_type="category",
+        xaxis_type="category",
     )
 
     for i, gu in enumerate(gu_names):
@@ -339,7 +324,7 @@ def volatility_heatmap(
         labels={"color": "변화율 (%)"},
         aspect="auto",
     )
-    fig.update_layout(xaxis_tickangle=-45)
+    fig.update_layout()
     return apply_theme(fig)
 
 

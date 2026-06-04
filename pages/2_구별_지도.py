@@ -13,7 +13,7 @@ from data_processor import (
     calc_relative_premium,
 )
 from map_view import create_choropleth
-from design_system import calc_table_height
+from design_system import show_chart, calc_table_height
 
 render_sidebar_filters()
 st.header("서울 구별 지도")
@@ -73,7 +73,7 @@ value_col, legend = col_map[metric]
 
 # 지도 (Plotly choropleth)
 fig = create_choropleth(summary, value_col=value_col, legend_name=legend, tooltip_data=summary)
-st.plotly_chart(fig, use_container_width=True, key="chart_map")
+show_chart(fig, use_container_width=True, key="chart_map")
 
 # 요약 테이블
 st.divider()

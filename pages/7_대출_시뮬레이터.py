@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
-from design_system import COLORS, apply_theme, format_price, format_pct
+from design_system import show_chart, COLORS, apply_theme, format_price, format_pct
 from sidebar_filters import render_sidebar_filters
 
 render_sidebar_filters()
@@ -201,7 +201,7 @@ with chart_tab1:
         barmode="stack",
     )
     fig_sched.update_layout(template="plotly_white", hovermode="x unified")
-    st.plotly_chart(fig_sched, use_container_width=True, key="chart_schedule")
+    show_chart(fig_sched, use_container_width=True, key="chart_schedule")
 
     # 잔액 추이
     annual_balance = schedule_df.groupby("연도")["잔액"].last().reset_index()
@@ -212,7 +212,7 @@ with chart_tab1:
     )
     fig_bal.update_traces(line_color="#2563eb", fillcolor="rgba(37,99,235,0.15)")
     fig_bal.update_layout(template="plotly_white")
-    st.plotly_chart(fig_bal, use_container_width=True, key="chart_balance")
+    show_chart(fig_bal, use_container_width=True, key="chart_balance")
 
 
 with chart_tab2:
@@ -254,7 +254,7 @@ with chart_tab2:
     )
     fig_sc.update_traces(texttemplate="%{text:.0f}만원", textposition="outside")
     fig_sc.update_layout(template="plotly_white", showlegend=False)
-    st.plotly_chart(fig_sc, use_container_width=True, key="chart_scenario")
+    show_chart(fig_sc, use_container_width=True, key="chart_scenario")
 
     fig_int = px.bar(
         sc_df, x="시나리오", y="총 이자 (만원)",
@@ -265,7 +265,7 @@ with chart_tab2:
     )
     fig_int.update_traces(texttemplate="%{text:,.0f}만원", textposition="outside")
     fig_int.update_layout(template="plotly_white", showlegend=False)
-    st.plotly_chart(fig_int, use_container_width=True, key="chart_total_interest")
+    show_chart(fig_int, use_container_width=True, key="chart_total_interest")
 
 
 with chart_tab3:
@@ -294,7 +294,7 @@ with chart_tab3:
     )
     fig_roi.update_traces(texttemplate="%{text:.2f}%", textposition="outside")
     fig_roi.update_layout(template="plotly_white", showlegend=False)
-    st.plotly_chart(fig_roi, use_container_width=True, key="chart_leverage")
+    show_chart(fig_roi, use_container_width=True, key="chart_leverage")
 
     # 가격 상승률별 ROI 민감도
     st.markdown("##### 가격 상승률 변화에 따른 ROI 민감도")
@@ -322,4 +322,4 @@ with chart_tab3:
                        annotation_text=f"현재 가정 {annual_appreciation:.1f}%")
     fig_sens.update_traces(line_color="#7c3aed", line_width=2)
     fig_sens.update_layout(template="plotly_white", hovermode="x unified")
-    st.plotly_chart(fig_sens, use_container_width=True, key="chart_sensitivity")
+    show_chart(fig_sens, use_container_width=True, key="chart_sensitivity")

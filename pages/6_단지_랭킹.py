@@ -13,7 +13,7 @@ from data_processor import (
     add_area_category,
     calc_apt_peak_drop,
 )
-from design_system import COLORS, apply_theme, create_figure, format_price, format_sqm_price, calc_table_height
+from design_system import show_chart, COLORS, apply_theme, create_figure, format_price, format_sqm_price, calc_table_height
 from sidebar_filters import render_sidebar_filters
 
 render_sidebar_filters()
@@ -171,7 +171,7 @@ with tab_up:
             "거래: %{customdata[5]}건<extra></extra>"
         ),
     ))
-    st.plotly_chart(fig, use_container_width=True, key="chart_top_up")
+    show_chart(fig, use_container_width=True, key="chart_top_up")
 
     _up_tbl = top_up[["구", "동", "단지명", "면적대", "대표면적(m2)", "시작 m2당가", "최근 m2당가", "m2당 상승률(%)", "거래건수"]]
     st.dataframe(
@@ -221,7 +221,7 @@ with tab_down:
             "거래: %{customdata[5]}건<extra></extra>"
         ),
     ))
-    st.plotly_chart(fig2, use_container_width=True, key="chart_top_down")
+    show_chart(fig2, use_container_width=True, key="chart_top_down")
 
     _down_tbl = top_down[["구", "동", "단지명", "면적대", "대표면적(m2)", "시작 m2당가", "최근 m2당가", "m2당 상승률(%)", "거래건수"]]
     st.dataframe(
@@ -311,7 +311,7 @@ with tab_peak:
                     "현재: %{customdata[5]}<extra></extra>"
                 ),
             ))
-            st.plotly_chart(fig3, use_container_width=True, key="chart_peak_drop")
+            show_chart(fig3, use_container_width=True, key="chart_peak_drop")
 
             _peak_tbl = peak_down[["gu_name", "dong", "apt_name", "면적대", "대표면적", "peak_sqm", "peak_ym", "current_sqm", "drop_pct"]].rename(columns={
                     "gu_name": "구", "dong": "동", "apt_name": "단지명",
@@ -347,4 +347,4 @@ with tab_peak:
                 text=[f"+{v:.1f}%" for v in peak_up.sort_values("drop_pct")["drop_pct"]],
                 textposition="outside",
             ))
-            st.plotly_chart(fig4, use_container_width=True, key="chart_peak_new_high")
+            show_chart(fig4, use_container_width=True, key="chart_peak_new_high")

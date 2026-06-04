@@ -25,7 +25,7 @@ from factor_model import (
     decompose_returns,
     FACTOR_LABELS,
 )
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_pct, calc_table_height,
 )
@@ -250,7 +250,7 @@ with tab1:
             legend=dict(orientation="h", yanchor="bottom", y=-0.3),
             height=380,
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_decomp_bar")
+        show_chart(fig, use_container_width=True, key="chart_decomp_bar")
 
         st.markdown("""
         **읽는 법**: 각 월의 막대를 합치면 실제 수익률(점선)과 일치합니다.
@@ -320,7 +320,7 @@ with tab2:
             annotation_font_color=COLORS["accent"],
         )
 
-        st.plotly_chart(fig_alpha, use_container_width=True, key="chart_alpha_line")
+        show_chart(fig_alpha, use_container_width=True, key="chart_alpha_line")
 
         # 알파 해석
         if len(alpha_df) >= 3:
@@ -392,7 +392,7 @@ with tab3:
                            annotation_text="β=1 (시장과 동일)", annotation_font_size=10)
         fig_beta.add_vline(x=0, line_color="#e2e8f0")
 
-        st.plotly_chart(fig_beta, use_container_width=True, key="chart_beta_bar")
+        show_chart(fig_beta, use_container_width=True, key="chart_beta_bar")
 
         st.caption("""
         **β > 1**: 시장보다 더 크게 반응 (공격적) /
@@ -463,4 +463,4 @@ with tab3:
                               annotation_text="β=1 (시장과 동일)")
         fig_beta_ts.add_hline(y=0, line_color="#e2e8f0")
 
-        st.plotly_chart(fig_beta_ts, use_container_width=True, key="chart_beta_ts")
+        show_chart(fig_beta_ts, use_container_width=True, key="chart_beta_ts")

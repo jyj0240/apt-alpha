@@ -20,7 +20,7 @@ from data_processor import (
 )
 from design_system import (
     COLORS, CATEGORICAL_10, create_figure, format_price, format_pct,
-    calc_table_height,
+    calc_table_height, show_chart,
 )
 from visualizer import (
     price_trend_chart,
@@ -103,26 +103,26 @@ st.divider()
 t1, t2, t3, t4, t5 = st.tabs(["실거래가", "m2당가", "거래량", "랭킹", "히트맵"])
 
 with t1:
-    st.plotly_chart(price_trend_chart(gu_agg, selected_gus),
+    show_chart(price_trend_chart(gu_agg, selected_gus),
                     use_container_width=True, key="c_trend")
 
 with t2:
-    st.plotly_chart(price_per_sqm_chart(gu_agg, selected_gus),
+    show_chart(price_per_sqm_chart(gu_agg, selected_gus),
                     use_container_width=True, key="c_sqm")
 
 with t3:
-    st.plotly_chart(trade_volume_chart(gu_agg, selected_gus),
+    show_chart(trade_volume_chart(gu_agg, selected_gus),
                     use_container_width=True, key="c_vol")
 
 with t4:
     if not change_df.empty:
-        st.plotly_chart(
+        show_chart(
             ranking_bar_chart(change_df, "change_pct",
                               title="구별 상승률 (%)", value_label="상승률 (%)"),
             use_container_width=True, key="c_rank")
 
 with t5:
-    st.plotly_chart(volatility_heatmap(gu_agg, selected_gus),
+    show_chart(volatility_heatmap(gu_agg, selected_gus),
                     use_container_width=True, key="c_heat")
 
 st.divider()
@@ -134,7 +134,7 @@ dong_agg = aggregate_by_dong_month(df)
 
 # 동별 바차트를 직접 그리기 (visualizer 함수 대신 — 더 컴팩트)
 from visualizer import dong_comparison_chart
-st.plotly_chart(dong_comparison_chart(dong_agg, dong_gu),
+show_chart(dong_comparison_chart(dong_agg, dong_gu),
                 use_container_width=True, key="c_dong")
 
 # --- 테이블 (expander) ---

@@ -24,7 +24,7 @@ from data_processor import (
     find_comparable_complexes,
     calc_investment_score,
 )
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_pct, calc_table_height,
 )
@@ -174,7 +174,7 @@ with tab1:
             margin=dict(l=50, r=20, t=40, b=30),
         )
         apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True, key="chart_decomp")
+        show_chart(fig, use_container_width=True, key="chart_decomp")
 
         # 해석 텍스트
         trend = decomp["trend"].dropna()
@@ -250,7 +250,7 @@ with tab2:
                 mode="lines+markers", name="6개월",
                 line=dict(color=COLORS["primary"], width=2), marker=dict(size=4),
             ))
-        st.plotly_chart(fig_vol, use_container_width=True, key="chart_vol")
+        show_chart(fig_vol, use_container_width=True, key="chart_vol")
 
     # Drawdown 차트
     dd_series = mdd["drawdown_series"]
@@ -267,7 +267,7 @@ with tab2:
             line=dict(color=COLORS["down"], width=1.5),
         ))
         fig_dd.add_hline(y=0, line_color="#cbd5e1")
-        st.plotly_chart(fig_dd, use_container_width=True, key="chart_dd")
+        show_chart(fig_dd, use_container_width=True, key="chart_dd")
 
     # 월별 거래건수
     liq_counts = liq["monthly_counts"]
@@ -287,7 +287,7 @@ with tab2:
             line=dict(color=COLORS["neutral"], width=1.5, dash="dash"),
             marker=dict(size=4),
         ))
-        st.plotly_chart(fig_liq, use_container_width=True, key="chart_liq")
+        show_chart(fig_liq, use_container_width=True, key="chart_liq")
 
 
 # =====================================================
@@ -343,7 +343,7 @@ with tab3:
             text=[f"{v:,.1f}" for v in comp_sorted["median_sqm"]],
             textposition="outside",
         ))
-        st.plotly_chart(fig_comp, use_container_width=True, key="chart_comp_bar")
+        show_chart(fig_comp, use_container_width=True, key="chart_comp_bar")
 
         # 시계열 비교 (상위 3개 + 타겟)
         top_comps = comparables.head(4)["apt_name"].tolist()
@@ -370,7 +370,7 @@ with tab3:
                 line=dict(color=color, width=width),
                 marker=dict(size=4 if apt != selected_apt else 6),
             ))
-        st.plotly_chart(fig_ts, use_container_width=True, key="chart_comp_ts")
+        show_chart(fig_ts, use_container_width=True, key="chart_comp_ts")
 
         # 비교 테이블
         st.markdown("**비교 단지 상세**")
@@ -499,7 +499,7 @@ with tab4:
             height=350,
             margin=dict(l=60, r=60, t=30, b=30),
         )
-        st.plotly_chart(fig_radar, use_container_width=True, key="chart_radar")
+        show_chart(fig_radar, use_container_width=True, key="chart_radar")
 
     # 점수 상세 테이블
     st.divider()

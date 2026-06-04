@@ -68,6 +68,7 @@ CHART_LAYOUT = dict(
         font=dict(size=10),
     ),
     margin=dict(l=45, r=8, t=40, b=30),
+    dragmode=False,
 )
 
 
@@ -103,6 +104,23 @@ def create_figure(**layout_kwargs) -> go.Figure:
     if layout_kwargs:
         fig.update_layout(**layout_kwargs)
     return fig
+
+
+# Plotly 차트 config (줌/드래그 비활성화, 툴바 숨김)
+PLOTLY_CONFIG = {
+    "displayModeBar": False,
+    "scrollZoom": False,
+    "doubleClick": False,
+    "staticPlot": False,  # hover는 유지
+}
+
+
+def show_chart(fig, **kwargs):
+    """st.plotly_chart 래퍼 — 줌/드래그 비활성화 config 자동 적용."""
+    import streamlit as st
+    kwargs.setdefault("use_container_width", True)
+    kwargs.setdefault("config", PLOTLY_CONFIG)
+    st.plotly_chart(fig, **kwargs)
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ from data_collector import collect_seoul_data
 from data_processor import (
     clean_trade_data, add_area_category, filter_outliers,
 )
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_sqm_price, format_pct, calc_table_height,
 )
@@ -195,7 +195,7 @@ with tab1:
             hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
         ))
 
-    st.plotly_chart(fig_sqm, use_container_width=True, key="chart_compare_sqm")
+    show_chart(fig_sqm, use_container_width=True, key="chart_compare_sqm")
 
 # === Tab 2: 총가 추이 ===
 with tab2:
@@ -221,7 +221,7 @@ with tab2:
             hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<extra></extra>",
         ))
 
-    st.plotly_chart(fig_price, use_container_width=True, key="chart_compare_price")
+    show_chart(fig_price, use_container_width=True, key="chart_compare_price")
 
 # === Tab 3: 수익률 비교 (기준점 = 100으로 인덱싱) ===
 with tab3:
@@ -255,7 +255,7 @@ with tab3:
             hovertemplate="<b>" + apt + "</b><br>%{y:.1f}<extra></extra>",
         ))
 
-    st.plotly_chart(fig_idx, use_container_width=True, key="chart_compare_index")
+    show_chart(fig_idx, use_container_width=True, key="chart_compare_index")
 
     # 기간 수익률 요약 바차트
     returns = []
@@ -284,7 +284,7 @@ with tab3:
             text=[f"{v:+.1f}%" for v in ret_df["수익률(%)"]],
             textposition="outside",
         ))
-        st.plotly_chart(fig_ret, use_container_width=True, key="chart_compare_return")
+        show_chart(fig_ret, use_container_width=True, key="chart_compare_return")
 
 # === Tab 4: 상세 테이블 ===
 with tab4:

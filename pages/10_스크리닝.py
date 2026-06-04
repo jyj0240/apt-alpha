@@ -10,7 +10,7 @@ from data_processor import (
     add_area_category, filter_outliers,
 )
 from screener import screen_complexes
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_sqm_price, format_pct, calc_table_height,
 )
@@ -175,7 +175,7 @@ with tab1:
         ))
 
     fig.update_layout(barmode="stack", legend=dict(orientation="h", y=-0.15))
-    st.plotly_chart(fig, use_container_width=True, key="chart_screen_total")
+    show_chart(fig, use_container_width=True, key="chart_screen_total")
 
     st.markdown("""
     **읽는 법**: 막대 전체 길이 = 종합 점수. 색상별로 어떤 팩터에서 점수를 얻었는지 보입니다.
@@ -214,7 +214,7 @@ with tab2:
                 text=[f"{v:.1f}" for v in top5_sorted[raw_col]],
                 textposition="outside",
             ))
-            st.plotly_chart(fig_f, use_container_width=True, key=f"chart_factor_{score_col}")
+            show_chart(fig_f, use_container_width=True, key=f"chart_factor_{score_col}")
 
 # === Tab 3: 상세 테이블 ===
 with tab3:

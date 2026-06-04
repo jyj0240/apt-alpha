@@ -17,7 +17,7 @@ from data_processor import (
     aggregate_by_gu_month,
     calc_apt_peak_drop,
 )
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_pct, add_last_point_label, add_reference_line,
     calc_table_height,
@@ -209,7 +209,7 @@ with tab1:
                 borderwidth=1, borderpad=6,
             )
 
-        st.plotly_chart(fig, use_container_width=True, key="chart_apt_trend")
+        show_chart(fig, use_container_width=True, key="chart_apt_trend")
 
         fig2 = create_figure(
             title="월별 거래건수",
@@ -222,7 +222,7 @@ with tab1:
             hovertemplate="%{x}<br>%{y}건<extra></extra>",
             name="거래건수",
         ))
-        st.plotly_chart(fig2, use_container_width=True, key="chart_apt_volume")
+        show_chart(fig2, use_container_width=True, key="chart_apt_volume")
     else:
         st.info("추이 차트를 그리기에 데이터가 부족합니다 (최소 2개월 필요).")
 
@@ -240,7 +240,7 @@ with tab2:
             labels={"price": "거래가격 (만원)"},
             points="all",
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_area_box")
+        show_chart(fig, use_container_width=True, key="chart_area_box")
 
         # 면적 vs 가격 산점도
         fig2 = px.scatter(
@@ -252,7 +252,7 @@ with tab2:
             labels={"area": "전용면적 (m2)", "price": "거래가격 (만원)", "area_category": "면적대"},
             opacity=0.7,
         )
-        st.plotly_chart(fig2, use_container_width=True, key="chart_area_scatter")
+        show_chart(fig2, use_container_width=True, key="chart_area_scatter")
 
 # 탭3: 층수 vs 가격
 with tab3:
@@ -278,7 +278,7 @@ with tab3:
             )),
         )
         apply_theme(fig)
-        st.plotly_chart(fig, use_container_width=True, key="chart_floor_price")
+        show_chart(fig, use_container_width=True, key="chart_floor_price")
 
         avg_by_floor = (
             floor_data
@@ -340,7 +340,7 @@ with tab4:
             height=max(300, len(apt_summary) * 30),
             coloraxis_showscale=False,
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_dong_compare")
+        show_chart(fig, use_container_width=True, key="chart_dong_compare")
 
         # 비교 테이블
         display = apt_summary_sorted.sort_values("median_price_per_sqm", ascending=False).rename(columns={
@@ -458,7 +458,7 @@ with tab6:
                     template="plotly_white",
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 )
-                st.plotly_chart(fig_gap, use_container_width=True, key="chart_gap_line")
+                show_chart(fig_gap, use_container_width=True, key="chart_gap_line")
 
                 # 갭 바차트
                 fig_bar = px.bar(
@@ -473,7 +473,7 @@ with tab6:
                     coloraxis_showscale=False,
                     template="plotly_white",
                 )
-                st.plotly_chart(fig_bar, use_container_width=True, key="chart_gap_bar")
+                show_chart(fig_bar, use_container_width=True, key="chart_gap_bar")
 
                 # 전세가율 추이
                 fig_ratio = px.line(
@@ -485,4 +485,4 @@ with tab6:
                 fig_ratio.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="70% 과열 기준")
                 fig_ratio.update_traces(line_color="#7c3aed", line_width=2)
                 fig_ratio.update_layout(xaxis_tickangle=-45, template="plotly_white")
-                st.plotly_chart(fig_ratio, use_container_width=True, key="chart_gap_ratio")
+                show_chart(fig_ratio, use_container_width=True, key="chart_gap_ratio")

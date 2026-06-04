@@ -19,7 +19,7 @@ from data_processor import (
     calc_contract_type_ratio,
 )
 from visualizer import scatter_matrix_chart, ranking_bar_chart
-from design_system import (
+from design_system import (show_chart,
     COLORS, CATEGORICAL_10, apply_theme, create_figure,
     format_price, format_pct, calc_table_height,
 )
@@ -129,7 +129,7 @@ if not trade_raw.empty and ratio_df is not None and not ratio_df.empty:
                 x_label="매매 상승률 (%)",
                 y_label="전세가율 (%)",
             )
-            st.plotly_chart(fig, use_container_width=True, key="chart_matrix")
+            show_chart(fig, use_container_width=True, key="chart_matrix")
         
         with m_col2:
             st.markdown("""
@@ -139,7 +139,7 @@ if not trade_raw.empty and ratio_df is not None and not ratio_df.empty:
             - **우하 (High-Low)**: 상승 + 전세 낮음 (갭투자 부담)
             - **좌하 (Low-Low)**: 시장 약세
             """)
-            st.plotly_chart(
+            show_chart(
                 ranking_bar_chart(
                     latest_ratio, "jeonse_ratio", title="구별 전세가율 (%)",
                     value_label="전세가율 (%)"
@@ -158,7 +158,7 @@ if not trade_raw.empty and ratio_df is not None and not ratio_df.empty:
     )
     fig_r.update_layout(hovermode="x unified", xaxis_tickangle=-45)
     fig_r.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="70% 과열 기준")
-    st.plotly_chart(fig_r, use_container_width=True, key="chart_jeonse_ratio")
+    show_chart(fig_r, use_container_width=True, key="chart_jeonse_ratio")
 else:
     st.info("매매 데이터와 전월세 데이터가 모두 필요합니다.")
 
@@ -190,7 +190,7 @@ with lcol:
                 customdata=list(zip([gu] * len(gu_d), formatted)),
                 hovertemplate="<b>%{customdata[0]}</b><br>%{x}<br>%{customdata[1]}<extra></extra>",
             ))
-        st.plotly_chart(fig_j, use_container_width=True, key="chart_jeonse_deposit")
+        show_chart(fig_j, use_container_width=True, key="chart_jeonse_deposit")
     else:
         st.info("전세 데이터 부족")
 
@@ -214,7 +214,7 @@ with rcol:
                 customdata=[[gu]] * len(gu_d),
                 hovertemplate="<b>%{customdata[0]}</b><br>%{x}<br>%{y:.0f}만원<extra></extra>",
             ))
-        st.plotly_chart(fig_w, use_container_width=True, key="chart_wolse_rent")
+        show_chart(fig_w, use_container_width=True, key="chart_wolse_rent")
     else:
         st.info("월세 데이터 부족")
 
@@ -246,7 +246,7 @@ with esc_col:
             text=[f"{v:+.1f}%" for v in esc_sorted["median_escalation_pct"]],
             textposition="outside",
         ))
-        st.plotly_chart(fig_esc, use_container_width=True, key="chart_rent_escalation")
+        show_chart(fig_esc, use_container_width=True, key="chart_rent_escalation")
     else:
         st.info("갱신 계약 데이터가 없습니다.")
 
@@ -271,7 +271,7 @@ with ct_col:
             customdata=list(zip(ct_sorted["renewal_count"], ct_sorted["new_count"])),
             hovertemplate="<b>%{y}</b><br>갱신: %{customdata[0]}건<br>신규: %{customdata[1]}건<extra></extra>",
         ))
-        st.plotly_chart(fig_ct, use_container_width=True, key="chart_contract_type")
+        show_chart(fig_ct, use_container_width=True, key="chart_contract_type")
     else:
         st.info("계약 유형 데이터가 없습니다.")
 

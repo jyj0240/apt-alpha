@@ -1,3 +1,4 @@
+from design_system import show_chart
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -134,7 +135,7 @@ if submit_btn:
             param_name, vary_range = var_map[sensitivity_var]
             base_val = base_params.get(param_name)
             fig = sensitivity_chart(predictor, base_params, param_name, vary_range, sensitivity_var, base_value=base_val)
-            st.plotly_chart(fig, use_container_width=True, key="chart_sensitivity")
+            show_chart(fig, use_container_width=True, key="chart_sensitivity")
 
 st.divider()
 
@@ -162,4 +163,4 @@ with st.expander("🛠️ 모델 성능 및 Feature 중요도 보기"):
             title="모델 예측 영향도 (Feature Importance)",
             labels={"importance": "중요도", "feature_kr": ""},
         )
-        st.plotly_chart(fig, use_container_width=True, key="chart_feature_importance")
+        show_chart(fig, use_container_width=True, key="chart_feature_importance")

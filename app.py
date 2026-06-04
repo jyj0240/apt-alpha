@@ -153,9 +153,59 @@ if not API_KEY or API_KEY == "YOUR_API_KEY_HERE":
     )
     st.stop()
 
-# --- 온보딩: 조건 설정 먼저 ---
+# --- 온보딩 CSS ---
 st.markdown("""
-<div class="hero-section">
+<style>
+.onboard-title {
+    text-align: center;
+    padding: 20px 0 8px 0;
+}
+.onboard-title h1 {
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    color: #2563eb !important;
+    margin-bottom: 2px;
+}
+.onboard-title p {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+.step-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2563eb;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+.summary-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 8px 0;
+    text-align: center;
+}
+.summary-box .val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.summary-box .label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+@media (max-width: 640px) {
+    .onboard-title h1 { font-size: 1.4rem !important; }
+    .onboard-title p { font-size: 0.75rem; }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- 온보딩 화면 ---
+st.markdown("""
+<div class="onboard-title">
     <h1>APT Alpha</h1>
     <p>서울 아파트 실거래가 분석</p>
 </div>
@@ -164,19 +214,45 @@ st.markdown("""
 from datetime import datetime, timedelta
 from config import SEOUL_GU_CODES, AREA_CATEGORIES
 
-st.markdown("### 분석 조건 설정")
-st.caption("아래에서 조건을 설정하면 모든 분석 페이지에 자동 적용됩니다.")
+# ===== STEP 1: 관심 지역 =====
+st.markdown('<p class="step-label">Step 1 &mdash; 관심 지역</p>', unsafe_allow_html=True)
 
-# 1. 관심 구 선택
 gu_names = list(SEOUL_GU_CODES.values())
-selected_gus = st.multiselect(
-    "관심 지역",
-    gu_names,
-    default=st.session_state.get("selected_gus", ["강남구", "서초구"]),
-    key="home_gus",
-)
 
-# 2. 기간 설정
+# 주요 구 빠른 선택 버튼
+popular_gus = ["강남구", "서초구", "송파구", "마포구", "용산구", "성동구"]
+current_gus = list(st.session_state.get("selected_gus", ["강남구", "서초구"]))
+
+quick_cols = st.columns(len(popular_gus))
+for i, gu in enumerate(popular_gus):
+    is_selected = gu in current_gus
+    label = f"{'✓ ' if is_selected else ''}{gu.replace('구', '')}"
+    if quick_cols[i].button(label, key=f"quick_{gu}", use_container_width=True,
+                            type="primary" if is_selected else "secondary"):
+        if gu in current_gus:
+            current_gus.remove(gu)
+        else:
+            current_gus.append(gu)
+        st.session_state["selected_gus"] = current_gus
+        st.rerun()
+
+# 기타 구 추가 (expander)
+with st.expander("기타 지역 선택"):
+    selected_gus = st.multiselect(
+        "전체 구 목록",
+        gu_names,
+        default=current_gus,
+        key="home_gus",
+        label_visibility="collapsed",
+    )
+    st.session_state["selected_gus"] = selected_gus
+    current_gus = selected_gus
+
+st.divider()
+
+# ===== STEP 2: 기간 =====
+st.markdown('<p class="step-label">Step 2 &mdash; 분석 기간</p>', unsafe_allow_html=True)
+
 today = datetime.today()
 last_month = today.replace(day=1) - timedelta(days=1)
 cur_year = today.year
@@ -194,78 +270,118 @@ default_end = last_month.strftime("%Y%m")
 def_sy, def_sm = _parse_ym(st.session_state.get("start_ym", default_start), cur_year - 1, 1)
 def_ey, def_em = _parse_ym(st.session_state.get("end_ym", default_end), cur_year, today.month)
 
-st.caption("분석 기간")
-pc1, pc2, pc3, pc4 = st.columns(4)
-start_year = pc1.selectbox("시작년", year_range,
-    index=year_range.index(def_sy) if def_sy in year_range else 0,
-    key="home_sy", label_visibility="collapsed", format_func=lambda y: f"{y}년")
-start_month = pc2.selectbox("시작월", month_range,
-    index=month_range.index(def_sm) if def_sm in month_range else 0,
-    key="home_sm", label_visibility="collapsed", format_func=lambda m: f"{m}월")
-end_year = pc3.selectbox("종료년", year_range,
-    index=year_range.index(def_ey) if def_ey in year_range else len(year_range) - 1,
-    key="home_ey", label_visibility="collapsed", format_func=lambda y: f"{y}년")
-end_month = pc4.selectbox("종료월", month_range,
-    index=month_range.index(def_em) if def_em in month_range else 0,
-    key="home_em", label_visibility="collapsed", format_func=lambda m: f"{m}월")
+# 빠른 기간 선택 버튼
+period_presets = {
+    "최근 1년": (1, 0),
+    "최근 3년": (3, 0),
+    "최근 5년": (5, 0),
+    "전체 (2020~)": (0, 0),
+}
+pr_cols = st.columns(len(period_presets))
+for i, (label, (years_back, _)) in enumerate(period_presets.items()):
+    if pr_cols[i].button(label, key=f"period_{i}", use_container_width=True):
+        if years_back == 0:
+            st.session_state["start_ym"] = "202001"
+        else:
+            sy = last_month.year - years_back
+            sm = last_month.month
+            st.session_state["start_ym"] = f"{sy}{sm:02d}"
+        st.session_state["end_ym"] = default_end
+        st.rerun()
 
-start_ym = f"{start_year}{start_month:02d}"
-end_ym = f"{end_year}{end_month:02d}"
-if start_ym > end_ym:
-    st.warning("시작이 종료보다 늦습니다.")
+# 세부 조정
+with st.expander("기간 직접 설정"):
+    pc1, pc2 = st.columns(2)
+    start_year = pc1.selectbox("시작", year_range,
+        index=year_range.index(def_sy) if def_sy in year_range else 0,
+        key="home_sy", format_func=lambda y: f"{y}년")
+    start_month = pc2.selectbox("월", month_range,
+        index=month_range.index(def_sm) if def_sm in month_range else 0,
+        key="home_sm", format_func=lambda m: f"{m}월")
+    ec1, ec2 = st.columns(2)
+    end_year = ec1.selectbox("종료", year_range,
+        index=year_range.index(def_ey) if def_ey in year_range else len(year_range) - 1,
+        key="home_ey", format_func=lambda y: f"{y}년")
+    end_month = ec2.selectbox("월 ", month_range,
+        index=month_range.index(def_em) if def_em in month_range else 0,
+        key="home_em", format_func=lambda m: f"{m}월")
+    st.session_state["start_ym"] = f"{start_year}{start_month:02d}"
+    st.session_state["end_ym"] = f"{end_year}{end_month:02d}"
 
-# 3. 면적대 + 연식
-fc1, fc2 = st.columns(2)
-area_options = ["전체"] + list(AREA_CATEGORIES.keys())
-selected_area = fc1.selectbox("면적대", area_options,
-    index=area_options.index(st.session_state.get("selected_area", "전체"))
-    if st.session_state.get("selected_area", "전체") in area_options else 0,
-    key="home_area")
-
-from sidebar_filters import _build_year_options
-build_year_options = _build_year_options()
-selected_build_year = fc2.selectbox("연식", build_year_options,
-    index=build_year_options.index(st.session_state.get("selected_build_year", "전체"))
-    if st.session_state.get("selected_build_year", "전체") in build_year_options else 0,
-    key="home_build")
-
-# session_state 업데이트 (사이드바에 자동 반영)
-st.session_state["selected_gus"] = selected_gus
-st.session_state["start_ym"] = start_ym
-st.session_state["end_ym"] = end_ym
-st.session_state["selected_area"] = selected_area
-st.session_state["selected_build_year"] = selected_build_year
-
-# 사이드바도 렌더 (다른 페이지와 동기화)
-render_sidebar_filters()
+start_ym = st.session_state.get("start_ym", default_start)
+end_ym = st.session_state.get("end_ym", default_end)
 
 st.divider()
 
-# 4. 안내
-if not selected_gus:
-    st.info("위에서 관심 지역을 선택하세요.")
-else:
-    gu_text = ", ".join(selected_gus)
-    st.success(f"**{gu_text}** / {start_year}.{start_month}~{end_year}.{end_month} / {selected_area} / {selected_build_year}")
-    st.markdown("왼쪽 메뉴에서 분석 페이지를 선택하세요.")
+# ===== STEP 3: 면적대 =====
+st.markdown('<p class="step-label">Step 3 &mdash; 면적대</p>', unsafe_allow_html=True)
 
-    # 간단 안내 카드
-    st.markdown("### 분석 메뉴")
-    m1, m2 = st.columns(2)
-    with m1:
-        st.markdown("""
-        - **가격 추이** — 구별 시세 흐름
-        - **구별 지도** — 25개 구 비교
-        - **가격 예측** — ML 기반 예측
-        - **전월세** — 전세가율 분석
-        - **단지 분석** — 개별 단지 상세
-        """)
-    with m2:
-        st.markdown("""
-        - **단지 랭킹** — 상승/하락 Top N
-        - **대출 시뮬레이터** — LTV/ROI
-        - **심층 분석** — STL/리스크/비교
-        - **알파 분석** — 팩터 분해
-        - **스크리닝** — 퀀트 스코어링
-        - **비교** — 단지간 추이 비교
-        """)
+area_options = list(AREA_CATEGORIES.keys())
+area_labels_short = {
+    "~60m2 소형": "소형 ~60",
+    "60~85m2 국민": "국민 60~85",
+    "85~102m2 중형": "중형 85~102",
+    "102~135m2 중대형": "중대형 102~135",
+    "135m2~ 대형": "대형 135~",
+}
+current_area = st.session_state.get("selected_area", "전체")
+
+ac = st.columns(3)
+if ac[0].button("전체", key="area_all", use_container_width=True,
+                type="primary" if current_area == "전체" else "secondary"):
+    st.session_state["selected_area"] = "전체"
+    st.rerun()
+
+ac2 = st.columns(len(area_options))
+for i, opt in enumerate(area_options):
+    short = area_labels_short.get(opt, opt)
+    is_sel = current_area == opt
+    if ac2[i].button(short, key=f"area_{i}", use_container_width=True,
+                     type="primary" if is_sel else "secondary"):
+        st.session_state["selected_area"] = opt
+        st.rerun()
+
+st.divider()
+
+# ===== STEP 4: 연식 =====
+st.markdown('<p class="step-label">Step 4 &mdash; 연식</p>', unsafe_allow_html=True)
+
+from sidebar_filters import _build_year_options
+build_year_options = _build_year_options()
+current_build = st.session_state.get("selected_build_year", "전체")
+
+bc = st.columns(len(build_year_options))
+for i, opt in enumerate(build_year_options):
+    is_sel = current_build == opt
+    short = opt.split(" ")[0]  # "전체", "신축", "준신축", "중축", "구축"
+    if bc[i].button(short, key=f"build_{i}", use_container_width=True,
+                    type="primary" if is_sel else "secondary"):
+        st.session_state["selected_build_year"] = opt
+        st.rerun()
+
+st.divider()
+
+# ===== 설정 요약 =====
+selected_gus = st.session_state.get("selected_gus", [])
+selected_area = st.session_state.get("selected_area", "전체")
+selected_build_year = st.session_state.get("selected_build_year", "전체")
+
+# 사이드바 동기화
+render_sidebar_filters()
+
+if not selected_gus:
+    st.info("Step 1에서 관심 지역을 선택하세요.")
+else:
+    s_ym = st.session_state.get("start_ym", default_start)
+    e_ym = st.session_state.get("end_ym", default_end)
+    gu_text = " / ".join(selected_gus)
+    period_text = f"{s_ym[:4]}.{s_ym[4:]}~{e_ym[:4]}.{e_ym[4:]}"
+
+    st.markdown(f"""
+    <div class="summary-box">
+        <div class="val">{gu_text}</div>
+        <div class="label">{period_text} / {selected_area} / {selected_build_year}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("**왼쪽 메뉴에서 분석 페이지를 선택하세요.**")

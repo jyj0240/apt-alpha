@@ -234,35 +234,18 @@ from config import SEOUL_GU_CODES, AREA_CATEGORIES
 st.markdown('<p class="step-label">Step 1 &mdash; 관심 지역</p>', unsafe_allow_html=True)
 
 gu_names = list(SEOUL_GU_CODES.values())
+gu_short = {g: g.replace("구", "") for g in gu_names}
 
-# 주요 구 빠른 선택 버튼
-popular_gus = ["강남구", "서초구", "송파구", "마포구", "용산구", "성동구"]
-current_gus = list(st.session_state.get("selected_gus", ["강남구", "서초구"]))
-
-quick_cols = st.columns(len(popular_gus))
-for i, gu in enumerate(popular_gus):
-    is_selected = gu in current_gus
-    label = f"{'✓ ' if is_selected else ''}{gu.replace('구', '')}"
-    if quick_cols[i].button(label, key=f"quick_{gu}", use_container_width=True,
-                            type="primary" if is_selected else "secondary"):
-        if gu in current_gus:
-            current_gus.remove(gu)
-        else:
-            current_gus.append(gu)
-        st.session_state["selected_gus"] = current_gus
-        st.rerun()
-
-# 기타 구 추가 (expander)
-with st.expander("기타 지역 선택"):
-    selected_gus = st.multiselect(
-        "전체 구 목록",
-        gu_names,
-        default=current_gus,
-        key="home_gus",
-        label_visibility="collapsed",
-    )
-    st.session_state["selected_gus"] = selected_gus
-    current_gus = selected_gus
+selected_gus = st.pills(
+    "관심 지역",
+    gu_names,
+    default=st.session_state.get("selected_gus", ["강남구", "서초구"]),
+    selection_mode="multi",
+    format_func=lambda g: gu_short.get(g, g),
+    key="home_gus",
+    label_visibility="collapsed",
+)
+st.session_state["selected_gus"] = list(selected_gus) if selected_gus else []
 
 st.divider()
 
@@ -286,24 +269,39 @@ default_end = last_month.strftime("%Y%m")
 def_sy, def_sm = _parse_ym(st.session_state.get("start_ym", default_start), cur_year - 1, 1)
 def_ey, def_em = _parse_ym(st.session_state.get("end_ym", default_end), cur_year, today.month)
 
-# 빠른 기간 선택 버튼
-period_presets = {
-    "최근 1년": (1, 0),
-    "최근 3년": (3, 0),
-    "최근 5년": (5, 0),
-    "전체 (2020~)": (0, 0),
-}
-pr_cols = st.columns(len(period_presets))
-for i, (label, (years_back, _)) in enumerate(period_presets.items()):
-    if pr_cols[i].button(label, key=f"period_{i}", use_container_width=True):
-        if years_back == 0:
-            st.session_state["start_ym"] = "202001"
-        else:
-            sy = last_month.year - years_back
-            sm = last_month.month
-            st.session_state["start_ym"] = f"{sy}{sm:02d}"
-        st.session_state["end_ym"] = default_end
-        st.rerun()
+# 빠른 기간 선택
+period_labels = ["1년", "3년", "5년", "전체"]
+period_map = {"1년": 1, "3년": 3, "5년": 5, "전체": 0}
+
+# 현재 기간으로 기본값 추정
+current_start = st.session_state.get("start_ym", default_start)
+diff_months = (int(default_end[:4]) - int(current_start[:4])) * 12 + int(default_end[4:]) - int(current_start[4:])
+if diff_months <= 14:
+    default_period = "1년"
+elif diff_months <= 38:
+    default_period = "3년"
+elif diff_months <= 62:
+    default_period = "5년"
+else:
+    default_period = "전체"
+
+selected_period = st.pills(
+    "기간",
+    period_labels,
+    default=default_period,
+    key="home_period",
+    label_visibility="collapsed",
+)
+
+if selected_period:
+    years_back = period_map.get(selected_period, 1)
+    if years_back == 0:
+        st.session_state["start_ym"] = "202001"
+    else:
+        sy = last_month.year - years_back
+        sm = last_month.month
+        st.session_state["start_ym"] = f"{sy}{sm:02d}"
+    st.session_state["end_ym"] = default_end
 
 # 세부 조정
 with st.expander("기간 직접 설정"):
@@ -332,30 +330,25 @@ st.divider()
 # ===== STEP 3: 면적대 =====
 st.markdown('<p class="step-label">Step 3 &mdash; 면적대</p>', unsafe_allow_html=True)
 
-area_options = list(AREA_CATEGORIES.keys())
-area_labels_short = {
-    "~60m2 소형": "소형 ~60",
-    "60~85m2 국민": "국민 60~85",
-    "85~102m2 중형": "중형 85~102",
-    "102~135m2 중대형": "중대형 102~135",
-    "135m2~ 대형": "대형 135~",
+area_all_options = ["전체"] + list(AREA_CATEGORIES.keys())
+area_short = {
+    "전체": "전체",
+    "~60m2 소형": "소형",
+    "60~85m2 국민": "국민평형",
+    "85~102m2 중형": "중형",
+    "102~135m2 중대형": "중대형",
+    "135m2~ 대형": "대형",
 }
-current_area = st.session_state.get("selected_area", "전체")
 
-ac = st.columns(3)
-if ac[0].button("전체", key="area_all", use_container_width=True,
-                type="primary" if current_area == "전체" else "secondary"):
-    st.session_state["selected_area"] = "전체"
-    st.rerun()
-
-ac2 = st.columns(len(area_options))
-for i, opt in enumerate(area_options):
-    short = area_labels_short.get(opt, opt)
-    is_sel = current_area == opt
-    if ac2[i].button(short, key=f"area_{i}", use_container_width=True,
-                     type="primary" if is_sel else "secondary"):
-        st.session_state["selected_area"] = opt
-        st.rerun()
+selected_area = st.pills(
+    "면적대",
+    area_all_options,
+    default=st.session_state.get("selected_area", "전체"),
+    format_func=lambda a: area_short.get(a, a),
+    key="home_area",
+    label_visibility="collapsed",
+)
+st.session_state["selected_area"] = selected_area if selected_area else "전체"
 
 st.divider()
 
@@ -364,16 +357,17 @@ st.markdown('<p class="step-label">Step 4 &mdash; 연식</p>', unsafe_allow_html
 
 from sidebar_filters import _build_year_options
 build_year_options = _build_year_options()
-current_build = st.session_state.get("selected_build_year", "전체")
+build_short = {opt: opt.split(" ")[0] for opt in build_year_options}
 
-bc = st.columns(len(build_year_options))
-for i, opt in enumerate(build_year_options):
-    is_sel = current_build == opt
-    short = opt.split(" ")[0]  # "전체", "신축", "준신축", "중축", "구축"
-    if bc[i].button(short, key=f"build_{i}", use_container_width=True,
-                    type="primary" if is_sel else "secondary"):
-        st.session_state["selected_build_year"] = opt
-        st.rerun()
+selected_build_year = st.pills(
+    "연식",
+    build_year_options,
+    default=st.session_state.get("selected_build_year", "전체"),
+    format_func=lambda b: build_short.get(b, b),
+    key="home_build",
+    label_visibility="collapsed",
+)
+st.session_state["selected_build_year"] = selected_build_year if selected_build_year else "전체"
 
 st.divider()
 

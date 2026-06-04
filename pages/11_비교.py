@@ -162,6 +162,12 @@ for i, apt in enumerate(selected_apts):
 
 st.divider()
 
+# --- 공통: x축 정렬된 ym 목록 ---
+all_yms = sorted(set().union(*[
+    set(compare_data[apt]["monthly"]["ym"].tolist())
+    for apt in selected_apts if not compare_data[apt]["monthly"].empty
+]))
+
 # --- 차트 ---
 tab1, tab2, tab3, tab4 = st.tabs(["m2당 가격 추이", "총가 추이", "수익률 비교", "상세 테이블"])
 
@@ -170,6 +176,7 @@ with tab1:
     fig_sqm = create_figure(
         title=f"m2당 가격 추이 비교 ({target_area}m2)",
         xaxis_title="년월", yaxis_title="m2당 가격 (만원/m2)",
+        xaxis_categoryorder="array", xaxis_categoryarray=all_yms,
         hovermode="x unified", xaxis_tickangle=-45,
     )
 
@@ -195,6 +202,7 @@ with tab2:
     fig_price = create_figure(
         title=f"중위 거래가 추이 비교 ({target_area}m2)",
         xaxis_title="년월", yaxis_title="중위가 (만원)",
+        xaxis_categoryorder="array", xaxis_categoryarray=all_yms,
         hovermode="x unified", xaxis_tickangle=-45,
     )
 
@@ -225,6 +233,7 @@ with tab3:
     fig_idx = create_figure(
         title=f"수익률 인덱스 비교 (시작 = 100)",
         xaxis_title="년월", yaxis_title="인덱스",
+        xaxis_categoryorder="array", xaxis_categoryarray=all_yms,
         hovermode="x unified", xaxis_tickangle=-45,
     )
     fig_idx.add_hline(y=100, line_color="#cbd5e1", line_dash="dot")

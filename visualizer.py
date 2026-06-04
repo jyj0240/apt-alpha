@@ -29,9 +29,6 @@ def price_trend_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         return go.Figure()
 
     fig = create_figure(
-        title="구별 월별 중위 실거래가",
-        xaxis_title="년월",
-        yaxis_title="중위가격 (만원)",
         hovermode="x unified",
         xaxis_type="category",
     )
@@ -65,9 +62,6 @@ def price_per_sqm_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         return go.Figure()
 
     fig = create_figure(
-        title="구별 월별 중위 m2당 가격",
-        xaxis_title="년월",
-        yaxis_title="m2당 가격 (만원/m2)",
         hovermode="x unified",
         xaxis_type="category",
     )
@@ -117,9 +111,6 @@ def trade_volume_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
         return go.Figure()
 
     fig = create_figure(
-        title="구별 월별 거래량",
-        xaxis_title="년월",
-        yaxis_title="거래 건수",
         barmode="group",
         xaxis_type="category",
     )

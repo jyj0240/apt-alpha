@@ -67,7 +67,7 @@ CHART_LAYOUT = dict(
         x=0,
         font=dict(size=10),
     ),
-    margin=dict(l=45, r=8, t=40, b=30),
+    margin=dict(l=40, r=8, t=30, b=20),
     dragmode=False,
 )
 

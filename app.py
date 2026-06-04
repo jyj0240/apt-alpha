@@ -137,13 +137,28 @@ hr { border-color: #e2e8f0 !important; margin: 1.5rem 0 !important; }
 /* === 반응형: 모바일 (iPhone 375~430px) === */
 @media (max-width: 640px) {
     .block-container { padding: 0.5rem 0.6rem !important; }
-    [data-testid="stMetric"] { padding: 8px 10px !important; }
-    [data-testid="stMetricValue"] { font-size: 1rem !important; }
-    [data-testid="stMetricLabel"] { font-size: 0.62rem !important; }
-    [data-testid="stMetricDelta"] { font-size: 0.58rem !important; }
+
+    /* KPI 카드: 2열 강제 + 초소형 */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    [data-testid="stColumn"] {
+        flex: 0 0 48% !important;
+        max-width: 48% !important;
+    }
+    [data-testid="stMetric"] {
+        padding: 6px 8px !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stMetricValue"] { font-size: 0.85rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.6rem !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.55rem !important; }
+
     .stTabs [data-baseweb="tab-list"] { gap: 2px; padding: 2px; }
     .stTabs [data-baseweb="tab"] { padding: 5px 8px; font-size: 0.68rem; }
     h1 { font-size: 1.05rem !important; }
+    h3 { font-size: 0.9rem !important; }
     h2 { font-size: 0.88rem !important; }
     h3 { font-size: 0.82rem !important; }
     p, li, span, label, .stMarkdown { font-size: 0.78rem !important; }

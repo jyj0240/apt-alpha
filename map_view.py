@@ -55,7 +55,7 @@ def create_choropleth(
         df,
         geojson=geo_data,
         locations="gu_name",
-        featureidkey="properties.SIG_KOR_NM",
+        featureidkey="properties.name",
         color=value_col,
         color_continuous_scale=color_scale,
         color_continuous_midpoint=color_midpoint,

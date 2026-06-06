@@ -172,12 +172,11 @@ else:
     gu_text = " / ".join(selected_gus)
     period_text = f"{s_ym[:4]}.{s_ym[4:]}~{e_ym[:4]}.{e_ym[4:]}"
 
-    st.markdown(f"""
-    <div class="summary-box">
-        <div class="val">{gu_text}</div>
-        <div class="label">{period_text} / {selected_area} / {selected_build_year}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="summary-box"><div class="val">{gu_text}</div>'
+        f'<div class="label">{period_text} / {selected_area} / {selected_build_year}</div></div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown('<p class="step-label">분석 시작</p>', unsafe_allow_html=True)
 

@@ -188,19 +188,19 @@ if not API_KEY or API_KEY == "YOUR_API_KEY_HERE":
 pro_mode = bool(st.session_state.get("pro_mode", False))
 
 everyday_pages = [
-    st.Page("pages/0_오늘의_시장.py", title="오늘의 시장", icon="🏠", default=True),
-    st.Page("pages/1_가격_추이.py", title="가격 추이", icon="📈"),
-    st.Page("pages/4_전월세.py", title="전월세", icon="🔑"),
-    st.Page("pages/5_단지_분석.py", title="단지 분석", icon="🏢"),
-    st.Page("pages/6_단지_랭킹.py", title="단지 랭킹", icon="🏆"),
-    st.Page("pages/11_비교.py", title="비교", icon="🆚"),
-    st.Page("pages/시작하기.py", title="설정", icon="⚙️"),
+    st.Page("pages/0_오늘의_시장.py", title="오늘의 시장", default=True),
+    st.Page("pages/1_가격_추이.py", title="가격 추이"),
+    st.Page("pages/4_전월세.py", title="전월세"),
+    st.Page("pages/5_단지_분석.py", title="단지 분석"),
+    st.Page("pages/6_단지_랭킹.py", title="단지 랭킹"),
+    st.Page("pages/11_비교.py", title="비교"),
+    st.Page("pages/시작하기.py", title="설정"),
 ]
 
 pro_pages = [
-    st.Page("pages/8_심층_분석.py", title="심층 분석", icon="🔬"),
-    st.Page("pages/9_알파_분석.py", title="알파·베타", icon="📊"),
-    st.Page("pages/10_스크리닝.py", title="스크리닝", icon="🔎"),
+    st.Page("pages/8_심층_분석.py", title="심층 분석"),
+    st.Page("pages/9_알파_분석.py", title="알파·베타"),
+    st.Page("pages/10_스크리닝.py", title="스크리닝"),
 ]
 
 nav_sections = {"일상": everyday_pages}

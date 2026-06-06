@@ -324,9 +324,9 @@ def add_reference_line(fig: go.Figure, orientation: str = "h",
 
 # 시장 신호등: 3단계 (과열 / 보합 / 조정)
 SIGNALS = {
-    "hot":     {"emoji": "🔥", "label": "과열",  "color": COLORS["down"]},
-    "neutral": {"emoji": "⚖️", "label": "보합",  "color": COLORS["neutral"]},
-    "cool":    {"emoji": "❄️", "label": "조정",  "color": COLORS["primary"]},
+    "hot":     {"label": "과열", "color": COLORS["down"]},
+    "neutral": {"label": "보합", "color": COLORS["neutral"]},
+    "cool":    {"label": "조정", "color": COLORS["primary"]},
 }
 
 
@@ -336,7 +336,7 @@ def signal_from_metrics(change_pct: float = 0.0, momentum_pct: float = 0.0,
     """지표 → 시장 신호등 매핑.
 
     임계값은 초안이며 추후 튜닝 대상 (docs/REDESIGN.md §9).
-    Returns: {"key", "emoji", "label", "color"}
+    Returns: {"key", "label", "color"}
     """
     c = change_pct or 0.0
     m = momentum_pct or 0.0
@@ -367,7 +367,7 @@ def verdict_card(headline: str, sub: str | None = None,
             f'<span style="display:inline-block;background:{color};color:#ffffff;'
             f'font-size:0.72rem;font-weight:800;padding:3px 11px;border-radius:999px;'
             f'margin-bottom:8px;letter-spacing:0.3px;">'
-            f'{signal["emoji"]} {signal["label"]}</span>'
+            f'{signal["label"]}</span>'
         )
     sub_html = (
         f'<div style="color:{COLORS["text_secondary"]};font-size:0.82rem;'
@@ -418,7 +418,7 @@ def pro_section(title: str = "전문가 지표"):
             st.dataframe(...)
     """
     import streamlit as st
-    return st.expander(f"⚙️ {title}", expanded=is_pro_mode())
+    return st.expander(title, expanded=is_pro_mode())
 
 
 # 전문용어 → 사용자 라벨 사전 (M7에서 전 페이지 일괄 적용)

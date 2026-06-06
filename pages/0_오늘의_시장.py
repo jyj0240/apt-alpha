@@ -1,4 +1,4 @@
-"""🏠 오늘의 시장 — 답 먼저 대시보드 (개편 v1, docs/REDESIGN.md M3).
+"""오늘의 시장 — 답 먼저 대시보드 (개편 v1, docs/REDESIGN.md M3).
 
 관심 지역의 현황을 진입 즉시 '한 문장 판정 + 핵심 숫자 + 미니 차트'로 보여준다.
 일반 사용자가 3초 안에 "지금 분위기"를 파악하는 것이 목표.
@@ -81,7 +81,7 @@ show_chart(price_trend_chart(gu_agg, gus), key="dash_trend")
 st.divider()
 
 # --- 거래가 활발한 단지 Top 3 ---
-st.markdown("#### 👉 최근 거래가 활발한 단지")
+st.markdown("#### 최근 거래가 활발한 단지")
 apt_summary = aggregate_by_apt(df_primary)
 if not apt_summary.empty:
     top3 = (
@@ -108,9 +108,9 @@ st.divider()
 st.markdown('<p style="font-size:0.72rem;font-weight:700;color:#2563eb;'
             'letter-spacing:1px;">자세히 보기</p>', unsafe_allow_html=True)
 g1, g2, g3 = st.columns(3)
-if g1.button("📈 가격 추이", use_container_width=True):
+if g1.button("가격 추이", use_container_width=True):
     st.switch_page("pages/1_가격_추이.py")
-if g2.button("🏢 단지 분석", use_container_width=True):
+if g2.button("단지 분석", use_container_width=True):
     st.switch_page("pages/5_단지_분석.py")
-if g3.button("🔑 전월세", use_container_width=True):
+if g3.button("전월세", use_container_width=True):
     st.switch_page("pages/4_전월세.py")

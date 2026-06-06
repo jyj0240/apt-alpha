@@ -379,7 +379,7 @@ with tab3:
             "median_price": "중위가(만원)", "median_sqm": "m2당가",
             "trade_count": "거래건수", "change_pct": "상승률(%)", "is_target": "선택",
         })
-        comp_display["선택"] = comp_display["선택"].apply(lambda x: "★" if x else "")
+        comp_display["선택"] = comp_display["선택"].apply(lambda x: "●" if x else "")
         st.dataframe(
             comp_display[["선택", "단지명", "동", "건축년도", "중위가(만원)", "m2당가", "상승률(%)", "거래건수"]],
             use_container_width=True, hide_index=True,

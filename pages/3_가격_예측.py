@@ -47,7 +47,7 @@ if metrics["train_size"] == 0:
     st.stop()
 
 # --- 예측 입력 폼 ---
-st.subheader("🤖 아파트 가격 예측")
+st.subheader("아파트 가격 예측")
 
 with st.form("prediction_form"):
     col1, col2 = st.columns(2)
@@ -89,18 +89,18 @@ if submit_btn:
             m3.metric("차이", f"{diff:+,.0f}만원 ({diff_pct:+.1f}%)")
 
             if diff_pct > 5:
-                st.caption("💡 모델 예측이 시장가보다 높습니다. 상승 여력이 있거나 고평가 지역일 수 있습니다.")
+                st.caption("모델 예측이 시장가보다 높습니다. 상승 여력이 있거나 고평가 지역일 수 있습니다.")
             elif diff_pct < -5:
-                st.caption("💡 모델 예측이 시장가보다 낮습니다. 저평가 구간이거나 하락 요인이 반영되었을 수 있습니다.")
+                st.caption("모델 예측이 시장가보다 낮습니다. 저평가 구간이거나 하락 요인이 반영되었을 수 있습니다.")
             else:
-                st.caption("💡 모델 예측과 시장가가 유사합니다. 현재 시장가 수준이 적절히 반영되었습니다.")
+                st.caption("모델 예측과 시장가가 유사합니다. 현재 시장가 수준이 적절히 반영되었습니다.")
 
         st.divider()
 
         # --- 시나리오 비교 & 민감도 ---
         lcol, rcol = st.columns([1, 1.5])
         with lcol:
-            st.subheader("📍 같은 조건, 다른 구 비교")
+            st.subheader("같은 조건, 다른 구 비교")
             compare_gus = [g for g in SEOUL_GU_CODES.values() if g != pred_gu][:8]
             scenario_data = [{"구": pred_gu, "예측가(만원)": result, "비고": "선택"}]
 
@@ -116,7 +116,7 @@ if submit_btn:
             st.dataframe(scenario_df, use_container_width=True, hide_index=True)
 
         with rcol:
-            st.subheader("📈 변수별 민감도 분석")
+            st.subheader("변수별 민감도 분석")
             sensitivity_var = st.selectbox(
                 "변화시킬 변수 선택", ["전용면적", "층", "건물나이"], key="sens_var"
             )
@@ -140,7 +140,7 @@ if submit_btn:
 st.divider()
 
 # --- 모델 정보 (하단으로 이동) ---
-with st.expander("🛠️ 모델 성능 및 Feature 중요도 보기"):
+with st.expander("모델 성능 및 Feature 중요도 보기"):
     mc1 = st.columns(2)
     mc1[0].metric("MAE", f"{metrics['mae']:,.0f}만원")
     mc1[1].metric("R2 Score", f"{metrics['r2']:.4f}")

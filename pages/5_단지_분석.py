@@ -350,7 +350,7 @@ with tab4:
             "trade_count": "거래건수",
             "avg_build_year": "평균건축년도",
         })
-        display["선택"] = display["단지명"].apply(lambda x: "★" if x == selected_apt else "")
+        display["선택"] = display["단지명"].apply(lambda x: "●" if x == selected_apt else "")
         _apt_display = display[["선택", "단지명", "중위가격(만원)", "m2당(만원/m2)", "거래건수", "평균건축년도"]]
         st.dataframe(
             _apt_display,

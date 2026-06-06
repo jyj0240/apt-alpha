@@ -110,7 +110,7 @@ st.divider()
 
 # --- 1. 투자 매트릭스 & 전세가율 (가장 중요) ---
 st.subheader("1. 매매 상승률 vs 전세가율 분석")
-st.markdown("💡 **X축**: 매매 상승률 / **Y축**: 전세가율 → 사분면을 통해 투자 유망/주의 지역을 판단합니다.")
+st.markdown("**X축**: 매매 상승률 / **Y축**: 전세가율 → 사분면을 통해 투자 유망/주의 지역을 판단합니다.")
 
 if not trade_raw.empty and ratio_df is not None and not ratio_df.empty:
     trade_change = calc_period_change(trade_agg)

@@ -340,10 +340,20 @@ def clean_rent_data(df: pd.DataFrame) -> pd.DataFrame:
     # 구 이름 (CSV 로드 시 gu_code가 int로 읽힐 수 있으므로 str 변환)
     df["gu_name"] = df["gu_code"].astype(str).map(SEOUL_GU_CODES)
 
-    # 전세/월세 구분: monthly_rent가 0이면 전세, 아니면 월세
-    df["rent_type"] = df["monthly_rent"].apply(
-        lambda x: "전세" if pd.notna(x) and x == 0 else "월세"
-    )
+    # 전세/반전세/월세 3분류
+    # - 전세: 월세 0원
+    # - 반전세: 월세 있지만 소액(보증금의 0.5% 미만 = 전월세전환율 6% 기준 절반 이하)
+    # - 월세: 나머지
+    def _classify_rent(row):
+        mr = row.get("monthly_rent")
+        dep = row.get("deposit")
+        if pd.isna(mr) or mr == 0:
+            return "전세"
+        if pd.notna(dep) and dep > 0 and mr * 12 / dep < 0.06:
+            return "반전세"
+        return "월세"
+
+    df["rent_type"] = df.apply(_classify_rent, axis=1)
 
     # 결측치 제거
     df = df.dropna(subset=["deposit", "area"])

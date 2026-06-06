@@ -71,8 +71,10 @@ if rent_df.empty:
 
 # --- 상단 KPI 카드 ---
 jeonse_df = rent_df[rent_df["rent_type"] == "전세"]
+banjeonse_df = rent_df[rent_df["rent_type"] == "반전세"]
 wolse_df = rent_df[rent_df["rent_type"] == "월세"]
 jeonse_ratio_val = len(jeonse_df) / len(rent_df) * 100 if len(rent_df) > 0 else 0
+# 순수 월세만으로 m2당 월세 계산 (반전세 제외)
 wolse_per_area = (wolse_df["monthly_rent"] / wolse_df["area"]).median() if not wolse_df.empty else 0
 
 # 전세가율 계산 (매매 데이터 필요)
@@ -114,12 +116,14 @@ if avg_jeonse_ratio is not None and ratio_df is not None and not ratio_df.empty:
     verdict_card(f"{primary_gu} 전세가율 {pg_ratio:.0f}%", sub=interp + chg)
 
 # --- KPI ---
-rr1 = st.columns(2)
+banjeonse_ratio_val = len(banjeonse_df) / len(rent_df) * 100 if len(rent_df) > 0 else 0
+rr1 = st.columns(3)
 rr1[0].metric("전세 비중", f"{jeonse_ratio_val:.0f}%")
-rr1[1].metric("평균 전세가율", f"{avg_jeonse_ratio:.1f}%" if avg_jeonse_ratio else "N/A")
+rr1[1].metric("반전세 비중", f"{banjeonse_ratio_val:.0f}%")
+rr1[2].metric("평균 전세가율", f"{avg_jeonse_ratio:.1f}%" if avg_jeonse_ratio else "N/A")
 rr2 = st.columns(2)
 rr2[0].metric("전세가율 변화", f"{jeonse_ratio_change:+.1f}%p" if jeonse_ratio_change else "N/A")
-rr2[1].metric("월세 중위", f"{wolse_per_area:.1f}만원/m2" if wolse_per_area else "N/A")
+rr2[1].metric("월세 중위 (순수)", f"{wolse_per_area:.1f}만원/m2" if wolse_per_area else "N/A")
 
 st.divider()
 

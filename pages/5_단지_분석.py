@@ -348,6 +348,16 @@ with tab_dong:
                 labels={"median_price_per_sqm": "m2당 가격 (만원/m2)", "apt_name": "단지"},
                 color="median_price_per_sqm",
                 color_continuous_scale="Blues",
+                custom_data=["apt_name", "median_price_per_sqm", "median_price", "trade_count"],
+            )
+            fig.update_traces(
+                hovertemplate=(
+                    "<b>%{customdata[0]}</b><br>"
+                    "m2당: %{customdata[1]:,.0f}만원/m2<br>"
+                    "중위가: %{customdata[2]:,.0f}만원<br>"
+                    "거래: %{customdata[3]}건"
+                    "<extra></extra>"
+                ),
             )
             # 선택 단지 강조
             colors = [

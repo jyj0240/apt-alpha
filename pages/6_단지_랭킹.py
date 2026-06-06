@@ -1,9 +1,8 @@
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from config import GU_NAME_TO_CODE, AREA_CATEGORIES
+from config import GU_NAME_TO_CODE
 from data_collector import collect_seoul_data
 from data_processor import (
     clean_trade_data,
@@ -11,16 +10,17 @@ from data_processor import (
     filter_by_build_year,
     filter_outliers,
     add_area_category,
-    calc_apt_peak_drop,
 )
-from design_system import show_chart, COLORS, apply_theme, create_figure, format_price, format_sqm_price, calc_table_height
+from design_system import (
+    show_chart, COLORS, create_figure,
+    format_price, format_sqm_price, calc_table_height,
+)
 from sidebar_filters import render_sidebar_filters
 
 
 def _pad_x_for_labels(fig, values, frac: float = 0.18):
-    """가로 막대 바깥(outside) 값 라벨이 플롯 영역에서 잘리지 않도록
-    막대가 뻗는 방향으로 x축에 여유 공간을 준다."""
-    vals = [float(v) for v in values if v == v]  # NaN 제외
+    """가로 막대 바깥 값 라벨이 잘리지 않도록 x축 여유 공간."""
+    vals = [float(v) for v in values if v == v]
     if not vals:
         return
     lo, hi = min(0.0, min(vals)), max(0.0, max(vals))
@@ -65,303 +65,282 @@ if df.empty:
     st.warning("해당 조건의 데이터가 없습니다.")
     st.stop()
 
-
-# --- 단지별 대표 면적대 계산 ---
-def _get_apt_dominant_area(df: pd.DataFrame) -> dict:
-    """각 단지의 최빈 면적대를 반환한다."""
-    result = {}
-    for (gu, dong, apt), group in df.groupby(["gu_name", "dong", "apt_name"]):
-        mode = group["area_category"].mode()
-        result[(gu, dong, apt)] = mode.iloc[0] if not mode.empty else "전체"
-    return result
-
-
-apt_area_map = _get_apt_dominant_area(df)
-
-
-# --- m2당 가격 기준 기간 변화율 계산 ---
-def calc_apt_period_change(df: pd.DataFrame) -> pd.DataFrame:
-    """단지별 기간 내 m2당 단가 시작 vs 종료 변화율. 면적대 정보 포함."""
-    results = []
-    for (gu, dong, apt_name), group in df.groupby(["gu_name", "dong", "apt_name"]):
-        history = (
-            group.groupby("ym")
-            .agg(
-                median_price=("price", "median"),
-                median_sqm=("price_per_sqm", "median"),
-            )
-            .reset_index()
-            .sort_values("ym")
-        )
-        if len(history) < 2:
-            continue
-        first_sqm = history["median_sqm"].iloc[0]
-        last_sqm = history["median_sqm"].iloc[-1]
-        first_price = history["median_price"].iloc[0]
-        last_price = history["median_price"].iloc[-1]
-        trade_count = len(group)
-        median_area = round(group["area"].median(), 1)
-        dominant_area_cat = apt_area_map.get((gu, dong, apt_name), "전체")
-
-        change_pct = round((last_sqm - first_sqm) / first_sqm * 100, 1) if first_sqm > 0 else 0.0
-        results.append({
-            "구": gu, "동": dong, "단지명": apt_name,
-            "면적대": dominant_area_cat,
-            "대표면적(m2)": median_area,
-            "시작 m2당가": int(first_sqm),
-            "최근 m2당가": int(last_sqm),
-            "시작 중위가": int(first_price),
-            "최근 중위가": int(last_price),
-            "m2당 상승률(%)": change_pct,
-            "거래건수": trade_count,
-        })
-    if not results:
-        return pd.DataFrame()
-    return pd.DataFrame(results).sort_values("m2당 상승률(%)", ascending=False)
-
-
-ranking_df = calc_apt_period_change(df)
-
-if ranking_df.empty:
-    st.warning("기간 내 2개월 이상 거래가 있는 단지가 없습니다.")
-    st.stop()
-
-# --- 필터 컨트롤 ---
+# --- 필터 ---
 fc1, fc2 = st.columns(2)
-top_n = fc1.slider("상위/하위 단지 수", min_value=5, max_value=30, value=10, step=5)
+top_n = fc1.slider("표시 단지 수", min_value=5, max_value=30, value=10, step=5)
 min_trades = fc2.number_input("최소 거래건수", min_value=2, max_value=50, value=3, step=1,
-                              help="노이즈 제거를 위해 거래건수가 적은 단지를 필터링합니다.")
+                              help="거래건수가 적은 단지는 중위값이 왜곡될 수 있어 제외합니다.")
 
-area_options_ranking = ["전체 (면적대 무관)"] + sorted(ranking_df["면적대"].unique().tolist())
-compare_area = st.selectbox("비교 면적대 그룹", area_options_ranking,
-                            help="같은 면적대끼리 비교합니다.")
 
-ranking_df = ranking_df[ranking_df["거래건수"] >= min_trades]
-if compare_area != "전체 (면적대 무관)":
-    ranking_df = ranking_df[ranking_df["면적대"] == compare_area]
+# --- 단지별 집계 ---
+@st.cache_data(show_spinner=False)
+def _build_apt_stats(_df_hash, df_input):
+    results = []
+    for (gu, dong, apt), g in df_input.groupby(["gu_name", "dong", "apt_name"]):
+        tc = len(g)
+        if tc < 2:
+            continue
+        history = g.groupby("ym")["price_per_sqm"].median().sort_index()
+        peak_val = history.max()
+        peak_ym = history.idxmax()
+        current_val = history.iloc[-1]
+        drop_pct = round((current_val - peak_val) / peak_val * 100, 1) if peak_val > 0 else 0.0
+        med_price = int(g["price"].median())
+        med_sqm = round(g["price_per_sqm"].median(), 1)
+        med_area = round(g["area"].median(), 1)
+        by = int(g["build_year"].median()) if g["build_year"].notna().any() else 0
 
-if ranking_df.empty:
-    st.warning(f"해당 조건의 단지가 없습니다.")
+        results.append({
+            "gu": gu, "dong": dong, "apt": apt,
+            "area": med_area, "build_year": by,
+            "med_price": med_price, "med_sqm": med_sqm,
+            "trade_count": tc,
+            "peak_sqm": round(peak_val, 1), "peak_ym": peak_ym,
+            "current_sqm": round(current_val, 1), "drop_pct": drop_pct,
+        })
+    return pd.DataFrame(results) if results else pd.DataFrame()
+
+
+stats = _build_apt_stats(hash(df.to_csv()), df)
+if stats.empty:
+    st.warning("집계할 단지가 없습니다.")
     st.stop()
 
-st.caption(f"m2당 가격(만원/m2) 기준 비교 | 총 {len(ranking_df)}개 단지")
+stats = stats[stats["trade_count"] >= min_trades]
+if stats.empty:
+    st.warning(f"거래 {min_trades}건 이상인 단지가 없습니다.")
+    st.stop()
 
-tab_up, tab_down, tab_peak = st.tabs(["상승 Top", "하락 Top", "전고점 대비 낙폭"])
+st.caption(f"총 {len(stats)}개 단지 | m2당 중위가 기준")
 
-# --- 상승 Top ---
-with tab_up:
-    top_up = ranking_df.head(top_n).copy()
-    st.subheader(f"m2당 상승률 Top {top_n}")
 
-    top_up_sorted = top_up.sort_values("m2당 상승률(%)")
-    top_up_sorted["label"] = top_up_sorted["단지명"] + " (" + top_up_sorted["대표면적(m2)"].astype(str) + "m2)"
-
+# === 공통 바 차트 헬퍼 ===
+def _bar_chart(data, x_col, title, x_label, color, fmt_func, hover_extra=""):
+    """가로 막대 차트 + hover 생성."""
+    data = data.copy()
+    data["label"] = data["apt"] + " (" + data["dong"] + ")"
     fig = create_figure(
-        height=max(350, top_n * 38),
-        xaxis_title="m2당 상승률 (%)",
-        yaxis_title="",
+        height=max(320, len(data) * 34),
+        xaxis_title=x_label, yaxis_title="",
     )
     fig.add_trace(go.Bar(
-        x=top_up_sorted["m2당 상승률(%)"],
-        y=top_up_sorted["label"],
-        orientation="h",
-        marker=dict(
-            color=top_up_sorted["m2당 상승률(%)"],
-            colorscale=[[0, COLORS["primary_light"]], [1, COLORS["primary_dark"]]],
-        ),
-        text=[f"{v:+.1f}%" for v in top_up_sorted["m2당 상승률(%)"]],
+        x=data[x_col], y=data["label"], orientation="h",
+        marker_color=color,
+        text=[fmt_func(v) for v in data[x_col]],
         textposition="outside",
         customdata=list(zip(
-            top_up_sorted["구"], top_up_sorted["동"], top_up_sorted["면적대"],
-            [format_sqm_price(p) for p in top_up_sorted["시작 m2당가"]],
-            [format_sqm_price(p) for p in top_up_sorted["최근 m2당가"]],
-            top_up_sorted["거래건수"],
+            data["gu"], data["dong"], data["apt"],
+            [format_price(p) for p in data["med_price"]],
+            [format_sqm_price(p) for p in data["med_sqm"]],
+            data["trade_count"], data["build_year"],
         )),
         hovertemplate=(
-            "<b>%{customdata[0]} %{customdata[1]}</b><br>"
-            "면적대: %{customdata[2]}<br>"
-            "시작: %{customdata[3]} -> 최근: %{customdata[4]}<br>"
-            "거래: %{customdata[5]}건<extra></extra>"
+            "<b>%{customdata[2]}</b><br>"
+            "%{customdata[0]} %{customdata[1]}<br>"
+            "중위가: %{customdata[3]}<br>"
+            "m2당: %{customdata[4]}<br>"
+            "거래: %{customdata[5]}건 / 건축: %{customdata[6]}년"
+            + hover_extra +
+            "<extra></extra>"
         ),
     ))
-    _pad_x_for_labels(fig, top_up_sorted["m2당 상승률(%)"])
-    show_chart(fig, use_container_width=True, key="chart_top_up")
+    _pad_x_for_labels(fig, data[x_col])
+    return fig
 
-    _up_tbl = top_up[["구", "동", "단지명", "면적대", "대표면적(m2)", "시작 m2당가", "최근 m2당가", "m2당 상승률(%)", "거래건수"]]
-    st.dataframe(
-        _up_tbl,
-        column_config={
-            "시작 m2당가": st.column_config.NumberColumn("시작 m2당가", format="%,d만원/m2"),
-            "최근 m2당가": st.column_config.NumberColumn("최근 m2당가", format="%,d만원/m2"),
-            "m2당 상승률(%)": st.column_config.NumberColumn("상승률(%)", format="%+.1f%%"),
-        },
-        use_container_width=True, hide_index=True,
-        height=calc_table_height(len(_up_tbl)),
+
+# === 탭 구성 ===
+tab_price, tab_dong, tab_peak, tab_volume = st.tabs([
+    "가격 Top", "동별 대장", "전고점 대비", "거래 활발",
+])
+
+
+# --- 1. 가격 Top ---
+with tab_price:
+    st.markdown("#### 가장 비싼 단지")
+    top_price = stats.sort_values("med_sqm", ascending=False).head(top_n)
+    top_price_plot = top_price.sort_values("med_sqm")
+
+    fig = _bar_chart(
+        top_price_plot, "med_sqm",
+        title="m2당 가격 Top", x_label="m2당 가격 (만원/m2)",
+        color=COLORS["primary_dark"],
+        fmt_func=lambda v: f"{v:,.0f}",
+    )
+    show_chart(fig, key="chart_price_top")
+
+    tbl = top_price[["gu", "dong", "apt", "area", "build_year", "med_price", "med_sqm", "trade_count"]].rename(columns={
+        "gu": "구", "dong": "동", "apt": "단지명", "area": "면적(m2)",
+        "build_year": "건축년도", "med_price": "중위가(만원)",
+        "med_sqm": "m2당(만원/m2)", "trade_count": "거래건수",
+    })
+    st.dataframe(tbl, use_container_width=True, hide_index=True,
+                 height=calc_table_height(len(tbl)),
+                 column_config={
+                     "중위가(만원)": st.column_config.NumberColumn(format="%,d"),
+                     "m2당(만원/m2)": st.column_config.NumberColumn(format="%,.1f"),
+                 })
+
+
+# --- 2. 동별 대장 ---
+with tab_dong:
+    st.markdown("#### 동별 대장 아파트")
+    st.caption("각 동에서 m2당 가격이 가장 높은 단지")
+
+    dong_top_n = st.radio("동별 표시", [1, 3, 5], horizontal=True, index=0,
+                          format_func=lambda x: f"Top {x}" if x > 1 else "대장 1곳",
+                          key="dong_top_n")
+
+    dong_leaders = (
+        stats.sort_values("med_sqm", ascending=False)
+        .groupby("dong")
+        .head(dong_top_n)
+        .sort_values(["dong", "med_sqm"], ascending=[True, False])
     )
 
-# --- 하락 Top ---
-with tab_down:
-    top_down = ranking_df.tail(top_n).sort_values("m2당 상승률(%)").copy()
-    st.subheader(f"m2당 하락률 Top {top_n}")
+    # 차트: 동별로 색 구분
+    dl_plot = dong_leaders.sort_values("med_sqm").copy()
+    dl_plot["label"] = dl_plot["apt"] + " (" + dl_plot["dong"] + ")"
+    # 동별 색상 매핑
+    dongs = dl_plot["dong"].unique()
+    palette = [COLORS["primary_dark"], COLORS["primary"], COLORS["primary_light"],
+               COLORS["accent"], "#0891b2", "#16a34a", "#f59e0b", "#ea580c",
+               "#db2777", "#6366f1", "#65a30d", "#334155"]
+    dong_colors = {d: palette[i % len(palette)] for i, d in enumerate(sorted(dongs))}
+    bar_colors = [dong_colors[d] for d in dl_plot["dong"]]
 
-    top_down_sorted = top_down.sort_values("m2당 상승률(%)", ascending=False)
-    top_down_sorted["label"] = top_down_sorted["단지명"] + " (" + top_down_sorted["대표면적(m2)"].astype(str) + "m2)"
-
-    fig2 = create_figure(
-        height=max(350, top_n * 38),
-        xaxis_title="m2당 상승률 (%)",
-        yaxis_title="",
+    fig = create_figure(
+        height=max(350, len(dl_plot) * 32),
+        xaxis_title="m2당 가격 (만원/m2)", yaxis_title="",
     )
-    fig2.add_trace(go.Bar(
-        x=top_down_sorted["m2당 상승률(%)"],
-        y=top_down_sorted["label"],
-        orientation="h",
-        marker=dict(
-            color=top_down_sorted["m2당 상승률(%)"],
-            colorscale=[[0, COLORS["down"]], [1, "#fecaca"]],
-        ),
-        text=[f"{v:+.1f}%" for v in top_down_sorted["m2당 상승률(%)"]],
+    fig.add_trace(go.Bar(
+        x=dl_plot["med_sqm"], y=dl_plot["label"], orientation="h",
+        marker_color=bar_colors,
+        text=[f"{v:,.0f}" for v in dl_plot["med_sqm"]],
         textposition="outside",
         customdata=list(zip(
-            top_down_sorted["구"], top_down_sorted["동"], top_down_sorted["면적대"],
-            [format_sqm_price(p) for p in top_down_sorted["시작 m2당가"]],
-            [format_sqm_price(p) for p in top_down_sorted["최근 m2당가"]],
-            top_down_sorted["거래건수"],
+            dl_plot["gu"], dl_plot["dong"], dl_plot["apt"],
+            [format_price(p) for p in dl_plot["med_price"]],
+            dl_plot["trade_count"], dl_plot["build_year"],
         )),
         hovertemplate=(
-            "<b>%{customdata[0]} %{customdata[1]}</b><br>"
-            "면적대: %{customdata[2]}<br>"
-            "시작: %{customdata[3]} -> 최근: %{customdata[4]}<br>"
-            "거래: %{customdata[5]}건<extra></extra>"
+            "<b>%{customdata[2]}</b><br>"
+            "%{customdata[0]} %{customdata[1]}<br>"
+            "m2당: %{x:,.0f}만원/m2<br>"
+            "중위가: %{customdata[3]}<br>"
+            "거래: %{customdata[4]}건 / 건축: %{customdata[5]}년"
+            "<extra></extra>"
         ),
     ))
-    _pad_x_for_labels(fig2, top_down_sorted["m2당 상승률(%)"])
-    show_chart(fig2, use_container_width=True, key="chart_top_down")
+    _pad_x_for_labels(fig, dl_plot["med_sqm"])
+    show_chart(fig, key="chart_dong_leaders")
 
-    _down_tbl = top_down[["구", "동", "단지명", "면적대", "대표면적(m2)", "시작 m2당가", "최근 m2당가", "m2당 상승률(%)", "거래건수"]]
-    st.dataframe(
-        _down_tbl,
-        column_config={
-            "시작 m2당가": st.column_config.NumberColumn("시작 m2당가", format="%,d만원/m2"),
-            "최근 m2당가": st.column_config.NumberColumn("최근 m2당가", format="%,d만원/m2"),
-            "m2당 상승률(%)": st.column_config.NumberColumn("상승률(%)", format="%+.1f%%"),
-        },
-        use_container_width=True, hide_index=True,
-        height=calc_table_height(len(_down_tbl)),
-    )
+    tbl2 = dong_leaders[["gu", "dong", "apt", "area", "build_year", "med_price", "med_sqm", "trade_count"]].rename(columns={
+        "gu": "구", "dong": "동", "apt": "단지명", "area": "면적(m2)",
+        "build_year": "건축년도", "med_price": "중위가(만원)",
+        "med_sqm": "m2당(만원/m2)", "trade_count": "거래건수",
+    })
+    st.dataframe(tbl2, use_container_width=True, hide_index=True,
+                 height=calc_table_height(len(tbl2)),
+                 column_config={
+                     "중위가(만원)": st.column_config.NumberColumn(format="%,d"),
+                     "m2당(만원/m2)": st.column_config.NumberColumn(format="%,.1f"),
+                 })
 
-# --- 전고점 대비 낙폭 ---
+
+# --- 3. 전고점 대비 낙폭 ---
 with tab_peak:
-    st.subheader(f"전고점 대비 낙폭 Top {top_n}")
-    st.caption("m2당 가격 기준 전고점 대비 현재 가격 변화율")
+    st.markdown("#### 전고점 대비 낙폭")
+    st.caption("m2당 가격 기준, 고점 대비 현재 하락률이 큰 단지")
 
-    # m2당 가격 기준 전고점 계산
-    peak_results = []
-    for (gu, dong, apt_name), group in df.groupby(["gu_name", "dong", "apt_name"]):
-        if len(group) < 2:
-            continue
-        history = (
-            group.groupby("ym")["price_per_sqm"]
-            .median()
-            .reset_index()
-            .sort_values("ym")
+    peak_down = stats[stats["drop_pct"] < -1].sort_values("drop_pct").head(top_n)
+    peak_up = stats[stats["drop_pct"] > 1].sort_values("drop_pct", ascending=False).head(top_n)
+
+    if not peak_down.empty:
+        pd_plot = peak_down.sort_values("drop_pct", ascending=False).copy()
+        pd_plot["label"] = pd_plot["apt"] + " (" + pd_plot["dong"] + ")"
+
+        fig = create_figure(
+            height=max(320, len(pd_plot) * 34),
+            xaxis_title="전고점 대비 (%)", yaxis_title="",
         )
-        if len(history) < 2:
-            continue
-        peak_idx = history["price_per_sqm"].idxmax()
-        peak_val = history.loc[peak_idx, "price_per_sqm"]
-        peak_ym = history.loc[peak_idx, "ym"]
-        current_val = history["price_per_sqm"].iloc[-1]
-        drop_pct = round((current_val - peak_val) / peak_val * 100, 1) if peak_val > 0 else 0.0
-        median_area = round(group["area"].median(), 1)
-        dominant_cat = apt_area_map.get((gu, dong, apt_name), "전체")
+        fig.add_trace(go.Bar(
+            x=pd_plot["drop_pct"], y=pd_plot["label"], orientation="h",
+            marker_color=COLORS["down"],
+            text=[f"{v:.1f}%" for v in pd_plot["drop_pct"]],
+            textposition="outside",
+            customdata=list(zip(
+                pd_plot["gu"], pd_plot["dong"], pd_plot["apt"],
+                [format_sqm_price(p) for p in pd_plot["peak_sqm"]],
+                pd_plot["peak_ym"],
+                [format_sqm_price(p) for p in pd_plot["current_sqm"]],
+            )),
+            hovertemplate=(
+                "<b>%{customdata[2]}</b><br>"
+                "%{customdata[0]} %{customdata[1]}<br>"
+                "전고점: %{customdata[3]} (%{customdata[4]})<br>"
+                "현재: %{customdata[5]}<extra></extra>"
+            ),
+        ))
+        _pad_x_for_labels(fig, pd_plot["drop_pct"])
+        show_chart(fig, key="chart_peak_drop")
 
-        if len(group) >= min_trades:
-            peak_results.append({
-                "gu_name": gu, "dong": dong, "apt_name": apt_name,
-                "면적대": dominant_cat, "대표면적": median_area,
-                "peak_sqm": int(peak_val), "peak_ym": peak_ym,
-                "current_sqm": int(current_val),
-                "drop_pct": drop_pct,
-            })
-
-    peak_df = pd.DataFrame(peak_results).sort_values("drop_pct") if peak_results else pd.DataFrame()
-
-    if compare_area != "전체 (면적대 무관)" and not peak_df.empty:
-        peak_df = peak_df[peak_df["면적대"] == compare_area]
-
-    if peak_df.empty:
-        st.info("전고점 계산에 충분한 데이터가 없습니다.")
+        tbl3 = peak_down[["gu", "dong", "apt", "area", "peak_sqm", "peak_ym", "current_sqm", "drop_pct"]].rename(columns={
+            "gu": "구", "dong": "동", "apt": "단지명", "area": "면적(m2)",
+            "peak_sqm": "전고점 m2당가", "peak_ym": "고점시기",
+            "current_sqm": "현재 m2당가", "drop_pct": "전고점 대비(%)",
+        })
+        st.dataframe(tbl3, use_container_width=True, hide_index=True,
+                     height=calc_table_height(len(tbl3)),
+                     column_config={
+                         "전고점 m2당가": st.column_config.NumberColumn(format="%,.1f"),
+                         "현재 m2당가": st.column_config.NumberColumn(format="%,.1f"),
+                         "전고점 대비(%)": st.column_config.NumberColumn(format="%+.1f%%"),
+                     })
     else:
-        peak_down = peak_df[peak_df["drop_pct"] < 0].head(top_n).copy()
-        peak_up = peak_df[peak_df["drop_pct"] >= 0].sort_values("drop_pct", ascending=False).head(top_n).copy()
+        st.info("전고점보다 하락한 단지가 없습니다.")
 
-        if not peak_down.empty:
-            peak_down["label"] = peak_down["apt_name"] + " (" + peak_down["대표면적"].astype(str) + "m2)"
+    if not peak_up.empty:
+        st.markdown("##### 전고점 경신 단지")
+        pu_plot = peak_up.sort_values("drop_pct").copy()
+        pu_plot["label"] = pu_plot["apt"] + " (" + pu_plot["dong"] + ")"
+        fig2 = create_figure(
+            height=max(280, len(pu_plot) * 34),
+            xaxis_title="전고점 대비 (%)", yaxis_title="",
+        )
+        fig2.add_trace(go.Bar(
+            x=pu_plot["drop_pct"], y=pu_plot["label"], orientation="h",
+            marker_color=COLORS["primary"],
+            text=[f"+{v:.1f}%" for v in pu_plot["drop_pct"]],
+            textposition="outside",
+        ))
+        _pad_x_for_labels(fig2, pu_plot["drop_pct"])
+        show_chart(fig2, key="chart_peak_new_high")
 
-            fig3 = create_figure(
-                height=max(350, len(peak_down) * 38),
-                xaxis_title="전고점 대비 (%)",
-                yaxis_title="",
-            )
-            fig3.add_trace(go.Bar(
-                x=peak_down.sort_values("drop_pct", ascending=False)["drop_pct"],
-                y=peak_down.sort_values("drop_pct", ascending=False)["label"],
-                orientation="h",
-                marker=dict(color=COLORS["down"]),
-                text=[f"{v:.1f}%" for v in peak_down.sort_values("drop_pct", ascending=False)["drop_pct"]],
-                textposition="outside",
-                customdata=list(zip(
-                    peak_down.sort_values("drop_pct", ascending=False)["gu_name"],
-                    peak_down.sort_values("drop_pct", ascending=False)["dong"],
-                    peak_down.sort_values("drop_pct", ascending=False)["면적대"],
-                    [format_sqm_price(p) for p in peak_down.sort_values("drop_pct", ascending=False)["peak_sqm"]],
-                    peak_down.sort_values("drop_pct", ascending=False)["peak_ym"],
-                    [format_sqm_price(p) for p in peak_down.sort_values("drop_pct", ascending=False)["current_sqm"]],
-                )),
-                hovertemplate=(
-                    "<b>%{customdata[0]} %{customdata[1]}</b><br>"
-                    "면적대: %{customdata[2]}<br>"
-                    "전고점: %{customdata[3]} (%{customdata[4]})<br>"
-                    "현재: %{customdata[5]}<extra></extra>"
-                ),
-            ))
-            _pad_x_for_labels(fig3, peak_down["drop_pct"])
-            show_chart(fig3, use_container_width=True, key="chart_peak_drop")
 
-            _peak_tbl = peak_down[["gu_name", "dong", "apt_name", "면적대", "대표면적", "peak_sqm", "peak_ym", "current_sqm", "drop_pct"]].rename(columns={
-                    "gu_name": "구", "dong": "동", "apt_name": "단지명",
-                    "peak_sqm": "전고점 m2당가", "peak_ym": "전고점 시기",
-                    "current_sqm": "현재 m2당가", "drop_pct": "전고점 대비(%)",
-                })
-            st.dataframe(
-                _peak_tbl,
-                column_config={
-                    "전고점 m2당가": st.column_config.NumberColumn(format="%,d만원/m2"),
-                    "현재 m2당가": st.column_config.NumberColumn(format="%,d만원/m2"),
-                    "전고점 대비(%)": st.column_config.NumberColumn(format="%+.1f%%"),
-                },
-                use_container_width=True, hide_index=True,
-                height=calc_table_height(len(_peak_tbl)),
-            )
-        else:
-            st.info("전고점보다 하락한 단지가 없습니다.")
+# --- 4. 거래 활발 ---
+with tab_volume:
+    st.markdown("#### 거래량 Top")
+    st.caption("조회 기간 내 거래가 가장 많은 단지 — 시장의 관심이 집중되는 곳")
 
-        if not peak_up.empty:
-            st.markdown("##### 전고점 경신 단지")
-            peak_up["label"] = peak_up["apt_name"] + " (" + peak_up["대표면적"].astype(str) + "m2)"
-            fig4 = create_figure(
-                height=max(300, len(peak_up) * 38),
-                xaxis_title="전고점 대비 (%)",
-                yaxis_title="",
-            )
-            fig4.add_trace(go.Bar(
-                x=peak_up.sort_values("drop_pct")["drop_pct"],
-                y=peak_up.sort_values("drop_pct")["label"],
-                orientation="h",
-                marker=dict(color=COLORS["primary"]),
-                text=[f"+{v:.1f}%" for v in peak_up.sort_values("drop_pct")["drop_pct"]],
-                textposition="outside",
-            ))
-            _pad_x_for_labels(fig4, peak_up["drop_pct"])
-            show_chart(fig4, use_container_width=True, key="chart_peak_new_high")
+    top_vol = stats.sort_values("trade_count", ascending=False).head(top_n)
+    tv_plot = top_vol.sort_values("trade_count").copy()
+
+    fig = _bar_chart(
+        tv_plot, "trade_count",
+        title="거래량 Top", x_label="거래건수",
+        color=COLORS["up"],
+        fmt_func=lambda v: f"{int(v)}건",
+    )
+    show_chart(fig, key="chart_vol_top")
+
+    tbl4 = top_vol[["gu", "dong", "apt", "area", "build_year", "med_price", "med_sqm", "trade_count"]].rename(columns={
+        "gu": "구", "dong": "동", "apt": "단지명", "area": "면적(m2)",
+        "build_year": "건축년도", "med_price": "중위가(만원)",
+        "med_sqm": "m2당(만원/m2)", "trade_count": "거래건수",
+    })
+    st.dataframe(tbl4, use_container_width=True, hide_index=True,
+                 height=calc_table_height(len(tbl4)),
+                 column_config={
+                     "중위가(만원)": st.column_config.NumberColumn(format="%,d"),
+                     "m2당(만원/m2)": st.column_config.NumberColumn(format="%,.1f"),
+                 })

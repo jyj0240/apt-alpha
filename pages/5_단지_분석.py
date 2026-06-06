@@ -156,12 +156,12 @@ row2[2].metric("건축연도", f"{build_year}년 ({building_age}년)")
 st.divider()
 
 # --- 차트 영역 ---
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "가격 추이", "면적별 분포", "층수 vs 가격", "동네 단지 비교", "실거래 내역", "매매-전세 갭"
+tab_trend, tab_dong, tab_raw, tab_gap, tab_area, tab_floor = st.tabs([
+    "가격 추이", "동네 단지 비교", "실거래 내역", "매매-전세 갭", "면적별 분포", "층수 vs 가격",
 ])
 
-# 탭1: 월별 가격 추이
-with tab1:
+# 탭: 월별 가격 추이
+with tab_trend:
     if not history.empty and len(history) > 1:
         formatted_prices = [format_price(p) for p in history["median_price"]]
         fig = create_figure(
@@ -226,8 +226,8 @@ with tab1:
     else:
         st.info("추이 차트를 그리기에 데이터가 부족합니다 (최소 2개월 필요).")
 
-# 탭2: 면적별 가격 분포
-with tab2:
+# 탭: 면적별 가격 분포
+with tab_area:
     area_groups = df_apt.copy()
     area_groups["면적대"] = area_groups["area_category"]
 
@@ -254,8 +254,8 @@ with tab2:
         )
         show_chart(fig2, use_container_width=True, key="chart_area_scatter")
 
-# 탭3: 층수 vs 가격
-with tab3:
+# 탭: 층수 vs 가격
+with tab_floor:
     if not df_apt.empty:
         floor_data = df_apt.dropna(subset=["floor", "price"]).copy()
         formatted_p = [format_price(p) for p in floor_data["price"]]
@@ -308,8 +308,8 @@ with tab3:
             use_container_width=True, hide_index=True,
         )
 
-# 탭4: 동네 단지 비교
-with tab4:
+# 탭: 동네 단지 비교
+with tab_dong:
     # 같은 면적대끼리 비교
     if selected_apt_area == 0:
         df_dong_compare = df_dong
@@ -378,8 +378,8 @@ with tab4:
                 height=calc_table_height(len(_apt_display)),
             )
 
-# 탭5: 실거래 내역
-with tab5:
+# 탭: 실거래 내역
+with tab_raw:
     display_cols = ["ym", "area", "floor", "price", "price_per_sqm", "date"]
     available = [c for c in display_cols if c in df_apt.columns]
     recent = df_apt[available].sort_values("date", ascending=False).head(200)
@@ -390,8 +390,8 @@ with tab5:
     st.markdown(f"**최근 거래 내역** (최대 200건, 전체 {len(df_apt)}건)")
     st.dataframe(recent, use_container_width=True, hide_index=True, height=calc_table_height(len(recent), max_h=600))
 
-# 탭6: 매매-전세 갭 추이
-with tab6:
+# 탭: 매매-전세 갭 추이
+with tab_gap:
     st.markdown("#### 매매 중위가 vs 전세 중위보증금 비교")
     st.caption("같은 단지·같은 면적대의 매매가와 전세 보증금을 월별로 비교합니다.")
 

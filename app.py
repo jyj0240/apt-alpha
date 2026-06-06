@@ -190,13 +190,10 @@ pro_mode = bool(st.session_state.get("pro_mode", False))
 everyday_pages = [
     st.Page("pages/0_오늘의_시장.py", title="오늘의 시장", icon="🏠", default=True),
     st.Page("pages/1_가격_추이.py", title="가격 추이", icon="📈"),
-    st.Page("pages/2_구별_지도.py", title="구별 지도", icon="🗺️"),
     st.Page("pages/4_전월세.py", title="전월세", icon="🔑"),
     st.Page("pages/5_단지_분석.py", title="단지 분석", icon="🏢"),
     st.Page("pages/6_단지_랭킹.py", title="단지 랭킹", icon="🏆"),
-    st.Page("pages/3_가격_예측.py", title="가격 예측", icon="🔮"),
     st.Page("pages/11_비교.py", title="비교", icon="🆚"),
-    st.Page("pages/7_대출_시뮬레이터.py", title="내 자금 (대출)", icon="💰"),
     st.Page("pages/시작하기.py", title="설정", icon="⚙️"),
 ]
 

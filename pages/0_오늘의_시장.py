@@ -108,9 +108,9 @@ st.divider()
 st.markdown('<p style="font-size:0.72rem;font-weight:700;color:#2563eb;'
             'letter-spacing:1px;">자세히 보기</p>', unsafe_allow_html=True)
 g1, g2, g3 = st.columns(3)
-if g1.button("🗺️ 가격 추이", use_container_width=True):
+if g1.button("📈 가격 추이", use_container_width=True):
     st.switch_page("pages/1_가격_추이.py")
 if g2.button("🏢 단지 분석", use_container_width=True):
     st.switch_page("pages/5_단지_분석.py")
-if g3.button("💰 대출 계산", use_container_width=True):
-    st.switch_page("pages/7_대출_시뮬레이터.py")
+if g3.button("🔑 전월세", use_container_width=True):
+    st.switch_page("pages/4_전월세.py")

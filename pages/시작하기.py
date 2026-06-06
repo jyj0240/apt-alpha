@@ -190,5 +190,5 @@ else:
     go3, go4 = st.columns(2)
     if go3.button("단지 분석", key="go_apt", use_container_width=True):
         st.switch_page("pages/5_단지_분석.py")
-    if go4.button("구별 지도", key="go_map", use_container_width=True):
-        st.switch_page("pages/2_구별_지도.py")
+    if go4.button("전월세", key="go_rent", use_container_width=True):
+        st.switch_page("pages/4_전월세.py")

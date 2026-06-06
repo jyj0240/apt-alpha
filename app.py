@@ -101,6 +101,17 @@ hr { border-color: #e2e8f0 !important; margin: 1.5rem 0 !important; }
     overflow-x: auto;
 }
 
+/* === 차트 위 스크롤 매끄럽게 ===
+   plotly 드래그 레이어가 터치/스크롤 제스처를 가로채 페이지 스크롤이 끊기는 문제 방지.
+   세로 스크롤(pan-y)은 브라우저에 넘기고, hover 툴팁은 그대로 유지된다. */
+[data-testid="stPlotlyChart"],
+[data-testid="stPlotlyChart"] .js-plotly-plot,
+[data-testid="stPlotlyChart"] .plotly,
+[data-testid="stPlotlyChart"] .nsewdrag,
+[data-testid="stPlotlyChart"] .drag {
+    touch-action: pan-y !important;
+}
+
 /* === 히어로 / 카드 === */
 .hero-section {
     background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);

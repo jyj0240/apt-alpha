@@ -7,7 +7,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
-from config import SEOUL_GU_CODES, AREA_CATEGORIES
+from config import SEOUL_GU_CODES, AREA_CATEGORIES, DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
 from sidebar_filters import _build_year_options
 
 st.markdown("""
@@ -44,7 +44,7 @@ gu_short = {g: g.replace("구", "") for g in gu_names}
 
 selected_gus = st.pills(
     "관심 지역", gu_names,
-    default=st.session_state.get("selected_gus", ["강남구", "서초구"]),
+    default=st.session_state.get("selected_gus", list(DEFAULT_GUS)),
     selection_mode="multi",
     format_func=lambda g: gu_short.get(g, g),
     key="home_gus", label_visibility="collapsed",
@@ -70,7 +70,7 @@ def _parse_ym(ym_str, fy, fm):
         return fy, fm
 
 
-default_start = f"{last_month.year - 1}{last_month.month:02d}"
+default_start = DEFAULT_START_YM
 default_end = last_month.strftime("%Y%m")
 def_sy, def_sm = _parse_ym(st.session_state.get("start_ym", default_start), cur_year - 1, 1)
 def_ey, def_em = _parse_ym(st.session_state.get("end_ym", default_end), cur_year, today.month)
@@ -135,7 +135,7 @@ area_short = {
 
 selected_area = st.pills(
     "면적대", area_all_options,
-    default=st.session_state.get("selected_area", "전체"),
+    default=st.session_state.get("selected_area", DEFAULT_AREA),
     format_func=lambda a: area_short.get(a, a),
     key="home_area", label_visibility="collapsed",
 )

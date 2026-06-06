@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
-from config import SEOUL_GU_CODES, AREA_CATEGORIES
+from config import SEOUL_GU_CODES, AREA_CATEGORIES, DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
 
 
 def _build_year_options() -> list[str]:
@@ -19,8 +19,7 @@ def _default_yms() -> tuple[str, str]:
     today = datetime.today()
     last_month = today.replace(day=1) - timedelta(days=1)
     end = last_month.strftime("%Y%m")
-    start = f"{last_month.year - 1}{last_month.month:02d}"
-    return start, end
+    return DEFAULT_START_YM, end
 
 
 def render_sidebar_filters() -> dict:
@@ -41,7 +40,7 @@ def render_sidebar_filters() -> dict:
         gu_names = list(SEOUL_GU_CODES.values())
         selected_gus = st.multiselect(
             "분석 지역", gu_names,
-            default=st.session_state.get("selected_gus", ["강남구", "서초구"]),
+            default=st.session_state.get("selected_gus", list(DEFAULT_GUS)),
             key="sb_selected_gus",
         )
 
@@ -113,8 +112,8 @@ def render_sidebar_filters() -> dict:
 
         selected_area = st.selectbox(
             "면적대", area_options,
-            index=area_options.index(st.session_state.get("selected_area", "전체"))
-            if st.session_state.get("selected_area", "전체") in area_options else 0,
+            index=area_options.index(st.session_state.get("selected_area", DEFAULT_AREA))
+            if st.session_state.get("selected_area", DEFAULT_AREA) in area_options else 0,
             key="sb_area",
         )
 

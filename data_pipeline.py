@@ -16,9 +16,11 @@
 백엔드(data_collector / data_processor)는 변경하지 않는다. 표현 계층의 중복 제거 목적.
 """
 
+from datetime import datetime, timedelta
+
 import streamlit as st
 
-from config import GU_NAME_TO_CODE
+from config import GU_NAME_TO_CODE, DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
 from data_collector import collect_seoul_data, collect_seoul_rent_data
 from data_processor import (
     clean_trade_data,
@@ -53,11 +55,12 @@ def current_filters() -> dict:
     홈/사이드바에서 설정한 값을 페이지가 일관되게 꺼내 쓰기 위한 단일 진입점.
     """
     ss = st.session_state
+    last_complete = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y%m")
     return {
-        "gus": ss.get("selected_gus", []),
-        "start_ym": ss.get("start_ym", "202401"),
-        "end_ym": ss.get("end_ym", "202412"),
-        "area": ss.get("selected_area", "전체"),
+        "gus": ss.get("selected_gus", list(DEFAULT_GUS)),
+        "start_ym": ss.get("start_ym", DEFAULT_START_YM),
+        "end_ym": ss.get("end_ym", last_complete),
+        "area": ss.get("selected_area", DEFAULT_AREA),
         "build_year": ss.get("selected_build_year", "전체"),
         "exclude_outliers": ss.get("exclude_outliers", True),
     }

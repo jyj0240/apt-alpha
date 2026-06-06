@@ -23,11 +23,12 @@ from design_system import (
 from sidebar_filters import render_sidebar_filters
 from watchlist import load_watchlist, add_to_watchlist, remove_from_watchlist, key_of
 from comp_mapping import comparable_dongs, cluster_for, find_comparables_across
+from config import DEFAULT_GUS
 
 render_sidebar_filters()
 
 f = current_filters()
-gus = f["gus"] or ["강남구"]
+gus = f["gus"] or list(DEFAULT_GUS)
 
 st.markdown("### 내 단지")
 st.caption("관심·타겟 단지를 추가하면 동급 단지 대비 위치를 평가합니다. 비교군은 시장 대장군·인접 동을 매핑해 구 경계를 넘습니다.")

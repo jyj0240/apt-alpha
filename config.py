@@ -61,4 +61,9 @@ AREA_CATEGORIES = {
     "135m2~ 대형":      (135, 9999),
 }
 
+# 앱 공통 기본 필터값 (홈 온보딩 · 사이드바 · current_filters 폴백이 모두 참조)
+DEFAULT_GUS = ["강남구", "서초구", "송파구"]   # 강남3구
+DEFAULT_AREA = "60~85m2 국민"                  # 국민평형
+DEFAULT_START_YM = "202001"                    # 2020년 1월부터
+
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")

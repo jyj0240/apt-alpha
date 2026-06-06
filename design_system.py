@@ -374,18 +374,18 @@ def verdict_card(headline: str, sub: str | None = None,
         f'<div style="color:{COLORS["text_secondary"]};font-size:0.82rem;'
         f'margin-top:4px;">{sub}</div>' if sub else ""
     )
-    st.markdown(
-        f"""
-        <div style="background:{COLORS['surface_alt']};border:1px solid {COLORS['border']};
-             border-left:4px solid {color};border-radius:12px;padding:14px 16px;margin:6px 0 12px 0;">
-            {badge_html}
-            <div style="font-size:1.05rem;font-weight:700;color:{COLORS['text_primary']};
-                 line-height:1.45;">{headline}</div>
-            {sub_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
+    # 주의: 마크다운이 들여쓴 줄을 코드블록으로 오인해 HTML을 날것으로 출력하므로
+    # 들여쓰기 없이 한 줄로 조립한다.
+    html = (
+        f'<div style="background:{COLORS["surface_alt"]};border:1px solid {COLORS["border"]};'
+        f'border-left:4px solid {color};border-radius:12px;padding:14px 16px;margin:6px 0 12px 0;">'
+        f'{badge_html}'
+        f'<div style="font-size:1.05rem;font-weight:700;color:{COLORS["text_primary"]};'
+        f'line-height:1.45;">{headline}</div>'
+        f'{sub_html}'
+        f'</div>'
     )
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def hero_metrics(items: list[tuple]) -> None:

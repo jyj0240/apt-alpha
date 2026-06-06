@@ -69,6 +69,7 @@ CHART_LAYOUT = dict(
     ),
     margin=dict(l=40, r=8, t=30, b=20),
     dragmode=False,
+    height=320,  # 모바일 세로 과다 방지 기본 높이 (개별 차트는 update_layout로 덮어씀)
 )
 
 

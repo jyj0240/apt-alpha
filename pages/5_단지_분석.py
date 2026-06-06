@@ -318,46 +318,65 @@ with tab4:
         df_dong_compare = df_dong[df_dong["area"].round(0).astype(int) == selected_apt_area]
         compare_label = f"{selected_apt_area}m2"
     apt_summary = aggregate_by_apt(df_dong_compare)
-    if not apt_summary.empty:
-        apt_summary_sorted = apt_summary.sort_values("median_price_per_sqm", ascending=True)
 
-        fig = px.bar(
-            apt_summary_sorted,
-            x="median_price_per_sqm", y="apt_name",
-            orientation="h",
-            title=f"{selected_dong} 단지별 m2당 가격 비교 ({compare_label})",
-            labels={"median_price_per_sqm": "m2당 가격 (만원/m2)", "apt_name": "단지"},
-            color="median_price_per_sqm",
-            color_continuous_scale="Blues",
+    if apt_summary.empty:
+        st.info("비교할 단지 데이터가 없습니다.")
+    else:
+        # 거래가 적은 단지는 m2당가 중앙값이 1~2건에 휘둘려 막대가 비정상적으로 튄다.
+        # 최소 거래건수로 그런 플루크를 제외 (단, 선택 단지는 표본이 적어도 항상 표시).
+        min_trades = st.slider(
+            "최소 거래건수", min_value=1, max_value=10, value=3,
+            help="거래가 적은 단지는 m2당가 중앙값이 한두 건에 좌우돼 막대가 비정상적으로 튈 수 있어 제외합니다.",
+            key="dong_min_trades",
         )
-        # 선택 단지 강조
-        colors = [
-            "#1d4ed8" if apt == selected_apt else "#93c5fd"
-            for apt in apt_summary_sorted["apt_name"]
-        ]
-        fig.update_traces(marker_color=colors)
-        fig.update_layout(
-            height=max(300, len(apt_summary) * 30),
-            coloraxis_showscale=False,
-        )
-        show_chart(fig, use_container_width=True, key="chart_dong_compare")
+        keep = (apt_summary["trade_count"] >= min_trades) | (apt_summary["apt_name"] == selected_apt)
+        apt_summary = apt_summary[keep]
 
-        # 비교 테이블
-        display = apt_summary_sorted.sort_values("median_price_per_sqm", ascending=False).rename(columns={
-            "apt_name": "단지명",
-            "median_price": "중위가격(만원)",
-            "median_price_per_sqm": "m2당(만원/m2)",
-            "trade_count": "거래건수",
-            "avg_build_year": "평균건축년도",
-        })
-        display["선택"] = display["단지명"].apply(lambda x: "●" if x == selected_apt else "")
-        _apt_display = display[["선택", "단지명", "중위가격(만원)", "m2당(만원/m2)", "거래건수", "평균건축년도"]]
-        st.dataframe(
-            _apt_display,
-            use_container_width=True,
-            hide_index=True,
-            height=calc_table_height(len(_apt_display)),
-        )
+        if compare_label == "전체 면적":
+            st.caption("전체 면적을 섞은 기준입니다. 소형 위주 단지는 m2당가가 높게 보일 수 있어, 특정 면적을 골라 비교하면 더 정확합니다.")
+
+        if apt_summary.empty:
+            st.info(f"거래 {min_trades}건 이상인 단지가 없습니다. 기준을 낮춰보세요.")
+        else:
+            apt_summary_sorted = apt_summary.sort_values("median_price_per_sqm", ascending=True)
+
+            fig = px.bar(
+                apt_summary_sorted,
+                x="median_price_per_sqm", y="apt_name",
+                orientation="h",
+                title=f"{selected_dong} 단지별 m2당 가격 비교 ({compare_label})",
+                labels={"median_price_per_sqm": "m2당 가격 (만원/m2)", "apt_name": "단지"},
+                color="median_price_per_sqm",
+                color_continuous_scale="Blues",
+            )
+            # 선택 단지 강조
+            colors = [
+                "#1d4ed8" if apt == selected_apt else "#93c5fd"
+                for apt in apt_summary_sorted["apt_name"]
+            ]
+            fig.update_traces(marker_color=colors)
+            fig.update_layout(
+                height=max(300, len(apt_summary_sorted) * 30),
+                coloraxis_showscale=False,
+            )
+            show_chart(fig, use_container_width=True, key="chart_dong_compare")
+
+            # 비교 테이블
+            display = apt_summary_sorted.sort_values("median_price_per_sqm", ascending=False).rename(columns={
+                "apt_name": "단지명",
+                "median_price": "중위가격(만원)",
+                "median_price_per_sqm": "m2당(만원/m2)",
+                "trade_count": "거래건수",
+                "avg_build_year": "평균건축년도",
+            })
+            display["선택"] = display["단지명"].apply(lambda x: "●" if x == selected_apt else "")
+            _apt_display = display[["선택", "단지명", "중위가격(만원)", "m2당(만원/m2)", "거래건수", "평균건축년도"]]
+            st.dataframe(
+                _apt_display,
+                use_container_width=True,
+                hide_index=True,
+                height=calc_table_height(len(_apt_display)),
+            )
 
 # 탭5: 실거래 내역
 with tab5:

@@ -127,7 +127,8 @@ def render_complex_card(item: dict):
     else:
         verdict_card(
             f"{apt} 현재가 {format_price(latest_price)}",
-            sub=f"고점 대비 {drop:+.1f}%. 비교할 동급 단지가 부족해 상대 평가는 생략합니다.",
+            sub=(f"고점 대비 {drop:+.1f}%. 이 면적대 거래가 희소해(대형 평형 등) 동급 비교가 어렵습니다. "
+                 "조회 기간을 넓히면 비교가 가능해질 수 있습니다."),
         )
         hero_metrics([
             ("현재가", format_price(latest_price)),

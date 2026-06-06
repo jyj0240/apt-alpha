@@ -90,9 +90,12 @@ def find_comparables_across(
 
     호출측이 비교군 매핑으로 이미 좁혀 둔 (구, 동) 풀이라고 가정한다.
 
-    - 타겟: 같은 구·동·단지, 면적 ±15㎡, 거래 3건+ (신축도 잡히게 완화).
-    - 클러스터 멤버(cluster_keys): 연식 무관 포함 (거래 3건+).
-    - 그 외 후보: 면적 ±15㎡, 연식 ±7년, 거래 5건+.
+    면적 밴드는 평형에 비례(±max(15㎡, 면적×18%))해 넓힌다. 대형 평형은
+    거래가 희소해 고정 ±15㎡로는 동급 후보를 못 찾는 경우가 많기 때문.
+
+    - 타겟: 같은 구·동·단지, 면적 밴드 내, 거래 2건+.
+    - 클러스터 멤버(cluster_keys): 연식 무관 포함, 거래 2건+.
+    - 그 외 후보: 면적 밴드 내, 연식 ±7년, 거래 3건+.
 
     Returns:
         gu_name, dong, apt_name, build_year, median_price, median_sqm,
@@ -102,7 +105,8 @@ def find_comparables_across(
         return pd.DataFrame()
 
     keys = cluster_keys or set()
-    area_low, area_high = target_area - 15, target_area + 15
+    half = max(15.0, target_area * 0.18)
+    area_low, area_high = target_area - half, target_area + half
 
     results = []
     for (gu, dong, apt), group in df_pool.groupby(["gu_name", "dong", "apt_name"]):
@@ -110,7 +114,7 @@ def find_comparables_across(
         is_target = (gu == target_gu and dong == target_dong and apt == target_apt)
         is_cluster = _norm(apt) in keys if keys else False
 
-        min_trades = 3 if (is_target or is_cluster) else 5
+        min_trades = 2 if (is_target or is_cluster) else 3
         if len(area_filtered) < min_trades:
             continue
 

@@ -6,11 +6,12 @@
 """
 
 import streamlit as st
+import pandas as pd
 import plotly.graph_objects as go
 
 from data_pipeline import current_filters, load_trade
 from data_processor import (
-    find_comparable_complexes,
+    find_comparables_across,
     calc_apt_peak_drop,
     aggregate_by_gu_month,
     calc_period_change,
@@ -22,6 +23,7 @@ from design_system import (
 )
 from sidebar_filters import render_sidebar_filters
 from watchlist import load_watchlist, add_to_watchlist, remove_from_watchlist, key_of
+from comp_mapping import comparable_dongs, cluster_for
 
 render_sidebar_filters()
 
@@ -29,7 +31,7 @@ f = current_filters()
 gus = f["gus"] or ["강남구"]
 
 st.markdown("### 내 단지")
-st.caption("관심·타겟 단지를 추가하면 동급 단지(같은 구·비슷한 면적·연식) 대비 위치를 평가합니다.")
+st.caption("관심·타겟 단지를 추가하면 동급 단지 대비 위치를 평가합니다. 비교군은 시장 대장군·인접 동을 매핑해 구 경계를 넘습니다.")
 
 
 def render_complex_card(item: dict):
@@ -43,13 +45,24 @@ def render_complex_card(item: dict):
         remove_from_watchlist(k)
         st.rerun()
 
-    df_gu = load_trade([gu], f["start_ym"], f["end_ym"],
-                       area=None, build_year=None, exclude_outliers=f["exclude_outliers"])
-    if df_gu.empty:
-        st.caption("해당 구의 데이터가 없습니다.")
+    # 비교군 매핑: 구 경계를 넘는 동급/인접 동 풀을 구성
+    scope, group_name, mapped = comparable_dongs(gu, dong)
+    gus_needed = sorted({g for g, _ in scope})
+    frames = [
+        load_trade([g], f["start_ym"], f["end_ym"],
+                   area=None, build_year=None, exclude_outliers=f["exclude_outliers"])
+        for g in gus_needed
+    ]
+    frames = [x for x in frames if not x.empty]
+    if not frames:
+        st.caption("비교 지역 데이터가 없습니다.")
         return
+    pool = pd.concat(frames, ignore_index=True)
+    if mapped:
+        keyset = {f"{g}|{d}" for g, d in scope}
+        pool = pool[(pool["gu_name"] + "|" + pool["dong"]).isin(keyset)]
 
-    tgt = df_gu[(df_gu["dong"] == dong) & (df_gu["apt_name"] == apt)]
+    tgt = pool[(pool["gu_name"] == gu) & (pool["dong"] == dong) & (pool["apt_name"] == apt)]
     tgt = tgt[tgt["area"].round(0).astype(int) == area]
     if tgt.empty:
         st.caption("이 면적대의 거래가 없습니다. (기간을 늘려보세요)")
@@ -62,7 +75,8 @@ def render_complex_card(item: dict):
     pk = calc_apt_peak_drop(tgt)
     drop = float(pk.iloc[0]["drop_pct"]) if not pk.empty else 0.0
 
-    comps = find_comparable_complexes(df_gu, apt, build_yr, float(area))
+    cl_name, cl_keys = cluster_for(apt)
+    comps = find_comparables_across(pool, gu, dong, apt, build_yr, float(area), cluster_keys=cl_keys)
 
     if not comps.empty and comps["is_target"].any() and len(comps) >= 2:
         cs = comps.sort_values("median_sqm", ascending=False).reset_index(drop=True)
@@ -80,9 +94,15 @@ def render_complex_card(item: dict):
         else:
             sig = {"label": "동급과 비슷", "color": COLORS["neutral"]}
 
+        if cl_name:
+            scope_txt = f"비교군: {cl_name}(시장 대장군)"
+        elif group_name:
+            scope_txt = f"비교 범위: {group_name}(구 경계 포함)"
+        else:
+            scope_txt = "비교 범위: 같은 구"
         verdict_card(
             f"동급 {n}곳 중 {rank}위 · 평균 대비 {diff:+.1f}%",
-            sub=f"고점 대비 {drop:+.1f}%. 동급 = 같은 구·비슷한 면적(±15㎡)·연식(±5년) 단지.",
+            sub=f"고점 대비 {drop:+.1f}%. {scope_txt}. 동급 = 비슷한 면적·연식 단지.",
             signal=sig,
         )
         hero_metrics([
@@ -92,13 +112,14 @@ def render_complex_card(item: dict):
             ("고점 대비", format_pct(drop)),
         ])
 
-        # 동급 비교 막대 (내 단지 강조)
-        bar = cs.sort_values("median_sqm")
+        # 동급 비교 막대 (내 단지 강조, 구 경계 넘으므로 동 표기)
+        bar = cs.sort_values("median_sqm").copy()
+        bar["lbl"] = bar["apt_name"] + " (" + bar["dong"] + ")"
         colors = ["#1d4ed8" if t else "#cbd5e1" for t in bar["is_target"]]
         fig = create_figure(xaxis_title="m2당가 (만원/m2)", yaxis_title="",
                             height=max(200, len(bar) * 34))
         fig.add_trace(go.Bar(
-            x=bar["median_sqm"], y=bar["apt_name"], orientation="h",
+            x=bar["median_sqm"], y=bar["lbl"], orientation="h",
             marker_color=colors,
             text=[f"{v:.0f}" for v in bar["median_sqm"]], textposition="outside",
             hovertemplate="<b>%{y}</b><br>%{x:.0f}만원/m2<extra></extra>",

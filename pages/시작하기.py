@@ -182,7 +182,7 @@ else:
     st.markdown('<p class="step-label">분석 시작</p>', unsafe_allow_html=True)
 
     go1, go2 = st.columns(2)
-    if go1.button("오늘의 시장", key="go_today", use_container_width=True, type="primary"):
+    if go1.button("내 단지", key="go_today", use_container_width=True, type="primary"):
         st.switch_page("pages/0_오늘의_시장.py")
     if go2.button("가격 추이", key="go_trend", use_container_width=True):
         st.switch_page("pages/1_가격_추이.py")

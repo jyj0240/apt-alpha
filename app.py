@@ -188,7 +188,7 @@ if not API_KEY or API_KEY == "YOUR_API_KEY_HERE":
 pro_mode = bool(st.session_state.get("pro_mode", False))
 
 everyday_pages = [
-    st.Page("pages/0_오늘의_시장.py", title="오늘의 시장", default=True),
+    st.Page("pages/0_오늘의_시장.py", title="내 단지", default=True),
     st.Page("pages/1_가격_추이.py", title="가격 추이"),
     st.Page("pages/4_전월세.py", title="전월세"),
     st.Page("pages/5_단지_분석.py", title="단지 분석"),

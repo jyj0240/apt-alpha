@@ -1,116 +1,173 @@
-"""오늘의 시장 — 답 먼저 대시보드 (개편 v1, docs/REDESIGN.md M3).
+"""내 단지 — 단지 중심 홈.
 
-관심 지역의 현황을 진입 즉시 '한 문장 판정 + 핵심 숫자 + 미니 차트'로 보여준다.
-일반 사용자가 3초 안에 "지금 분위기"를 파악하는 것이 목표.
+타겟/관심 단지를 추가하면, 그 단지가 '동급 단지(같은 구·비슷한 면적·연식)' 대비
+어디쯤인지(순위·평균 대비·고점 대비)를 한 문장으로 평가한다.
+시장 전체 상황은 맨 아래 '배경'으로만 보조한다.
 """
 
 import streamlit as st
+import plotly.graph_objects as go
 
 from data_pipeline import current_filters, load_trade
 from data_processor import (
+    find_comparable_complexes,
+    calc_apt_peak_drop,
     aggregate_by_gu_month,
-    aggregate_by_apt,
     calc_period_change,
     calc_recent_momentum,
-    calc_volatility,
-    generate_insight_text,
 )
 from design_system import (
-    verdict_card, signal_from_metrics, hero_metrics, show_chart,
-    format_price, format_sqm_price, format_pct,
+    verdict_card, signal_from_metrics, hero_metrics, show_chart, create_figure,
+    format_price, format_sqm_price, format_pct, COLORS,
 )
-from visualizer import price_trend_chart
 from sidebar_filters import render_sidebar_filters
+from watchlist import load_watchlist, add_to_watchlist, remove_from_watchlist, key_of
 
 render_sidebar_filters()
 
 f = current_filters()
-gus = f["gus"] or ["강남구"]          # 미설정 시 기본 진입 지역
-primary_gu = gus[0]
+gus = f["gus"] or ["강남구"]
 
-# --- 데이터 ---
-df = load_trade(
-    gus, f["start_ym"], f["end_ym"],
-    area=f["area"], build_year=f["build_year"],
-    exclude_outliers=f["exclude_outliers"],
-)
-if df.empty:
-    st.info("선택한 조건의 거래 데이터가 없습니다. 사이드바에서 지역·기간을 바꿔보세요.")
-    st.stop()
-
-gu_agg = aggregate_by_gu_month(df)
-df_primary = df[df["gu_name"] == primary_gu]
-agg_primary = gu_agg[gu_agg["gu_name"] == primary_gu]
+st.markdown("### 내 단지")
+st.caption("관심·타겟 단지를 추가하면 동급 단지(같은 구·비슷한 면적·연식) 대비 위치를 평가합니다.")
 
 
-def _val(metric_df, col):
-    row = metric_df.loc[metric_df["gu_name"] == primary_gu, col]
-    return float(row.iloc[0]) if not row.empty else 0.0
+def render_complex_card(item: dict):
+    """관심 단지 1개의 상대 평가 카드를 렌더한다."""
+    gu, dong, apt, area = item["gu"], item["dong"], item["apt"], item["area"]
+    k = key_of(item)
 
+    head, btn = st.columns([5, 1])
+    head.markdown(f"#### {apt} · {area}㎡  ·  {gu} {dong}")
+    if btn.button("삭제", key=f"rm_{k}"):
+        remove_from_watchlist(k)
+        st.rerun()
 
-change_val = _val(calc_period_change(gu_agg), "change_pct")
-momentum_val = _val(calc_recent_momentum(gu_agg), "momentum_pct")
-vol_val = _val(calc_volatility(gu_agg), "volatility")
+    df_gu = load_trade([gu], f["start_ym"], f["end_ym"],
+                       area=None, build_year=None, exclude_outliers=f["exclude_outliers"])
+    if df_gu.empty:
+        st.caption("해당 구의 데이터가 없습니다.")
+        return
 
-# 최신 평당 시세
-latest_sqm = 0.0
-if not agg_primary.empty:
-    latest_row = agg_primary.sort_values("ym").iloc[-1]
-    latest_sqm = float(latest_row["median_price_per_sqm"])
+    tgt = df_gu[(df_gu["dong"] == dong) & (df_gu["apt_name"] == apt)]
+    tgt = tgt[tgt["area"].round(0).astype(int) == area]
+    if tgt.empty:
+        st.caption("이 면적대의 거래가 없습니다. (기간을 늘려보세요)")
+        return
 
-# --- 1층: 판정 카드 ---
-period_txt = f"{f['start_ym'][:4]}.{f['start_ym'][4:]}~{f['end_ym'][:4]}.{f['end_ym'][4:]}"
-st.markdown(f"### {primary_gu}  ·  {period_txt}")
+    build_yr = int(tgt["build_year"].median()) if tgt["build_year"].notna().any() else 0
+    latest_price = tgt.groupby("ym")["price"].median().sort_index().iloc[-1]
+    latest_sqm = float(tgt["price_per_sqm"].median())
 
-sig = signal_from_metrics(change_pct=change_val, momentum_pct=momentum_val)
-headline = f"지금 {primary_gu}는 '{sig['label']}' 구간입니다."
-sub = generate_insight_text(primary_gu, change_val, momentum_val, 0.0, vol_val)
-verdict_card(headline, sub=sub, signal=sig)
+    pk = calc_apt_peak_drop(tgt)
+    drop = float(pk.iloc[0]["drop_pct"]) if not pk.empty else 0.0
 
-# --- 2층: 핵심 숫자 ---
-hero_metrics([
-    ("평당 시세", format_sqm_price(latest_sqm)),
-    ("기간 상승률", format_pct(change_val)),
-    ("최근 상승세", format_pct(momentum_val)),
-    ("거래량", f"{len(df_primary):,}건"),
-])
+    comps = find_comparable_complexes(df_gu, apt, build_yr, float(area))
 
-# --- 미니 차트 ---
-show_chart(price_trend_chart(gu_agg, gus), key="dash_trend")
+    if not comps.empty and comps["is_target"].any() and len(comps) >= 2:
+        cs = comps.sort_values("median_sqm", ascending=False).reset_index(drop=True)
+        n = len(cs)
+        rank = int(cs.index[cs["is_target"]][0]) + 1
+        tsqm = float(cs.loc[cs["is_target"], "median_sqm"].iloc[0])
+        others = cs[~cs["is_target"]]
+        avg_o = float(others["median_sqm"].mean()) if not others.empty else tsqm
+        diff = round((tsqm - avg_o) / avg_o * 100, 1) if avg_o > 0 else 0.0
 
-st.divider()
+        if diff <= -5:
+            sig = {"label": "동급 대비 저평가", "color": COLORS["primary"]}
+        elif diff >= 5:
+            sig = {"label": "동급 대비 고평가", "color": COLORS["down"]}
+        else:
+            sig = {"label": "동급과 비슷", "color": COLORS["neutral"]}
 
-# --- 거래가 활발한 단지 Top 3 ---
-st.markdown("#### 최근 거래가 활발한 단지")
-apt_summary = aggregate_by_apt(df_primary)
-if not apt_summary.empty:
-    top3 = (
-        apt_summary[apt_summary["trade_count"] >= 3]
-        .sort_values("trade_count", ascending=False)
-        .head(3)
-    )
-    if top3.empty:
-        top3 = apt_summary.sort_values("trade_count", ascending=False).head(3)
-    cols = st.columns(len(top3)) if len(top3) > 0 else []
-    for col, (_, r) in zip(cols, top3.iterrows()):
-        col.metric(
-            f"{r['apt_name']}",
-            format_price(r["median_price"]),
-            delta=f"{r['dong']} · {int(r['trade_count'])}건",
-            delta_color="off",
+        verdict_card(
+            f"동급 {n}곳 중 {rank}위 · 평균 대비 {diff:+.1f}%",
+            sub=f"고점 대비 {drop:+.1f}%. 동급 = 같은 구·비슷한 면적(±15㎡)·연식(±5년) 단지.",
+            signal=sig,
         )
-else:
-    st.caption("표시할 단지가 없습니다.")
+        hero_metrics([
+            ("현재가", format_price(latest_price)),
+            ("m2당", format_sqm_price(latest_sqm)),
+            ("동급 평균 대비", format_pct(diff)),
+            ("고점 대비", format_pct(drop)),
+        ])
+
+        # 동급 비교 막대 (내 단지 강조)
+        bar = cs.sort_values("median_sqm")
+        colors = ["#1d4ed8" if t else "#cbd5e1" for t in bar["is_target"]]
+        fig = create_figure(xaxis_title="m2당가 (만원/m2)", yaxis_title="",
+                            height=max(200, len(bar) * 34))
+        fig.add_trace(go.Bar(
+            x=bar["median_sqm"], y=bar["apt_name"], orientation="h",
+            marker_color=colors,
+            text=[f"{v:.0f}" for v in bar["median_sqm"]], textposition="outside",
+            hovertemplate="<b>%{y}</b><br>%{x:.0f}만원/m2<extra></extra>",
+        ))
+        show_chart(fig, key=f"cmp_{k}")
+    else:
+        verdict_card(
+            f"{apt} 현재가 {format_price(latest_price)}",
+            sub=f"고점 대비 {drop:+.1f}%. 비교할 동급 단지가 부족해 상대 평가는 생략합니다.",
+        )
+        hero_metrics([
+            ("현재가", format_price(latest_price)),
+            ("m2당", format_sqm_price(latest_sqm)),
+            ("고점 대비", format_pct(drop)),
+        ])
+
+
+# --- 관심 단지 추가 ---
+wl = load_watchlist()
+with st.expander("관심 단지 추가", expanded=not wl):
+    df_add = load_trade(gus, f["start_ym"], f["end_ym"],
+                        area=None, build_year=None, exclude_outliers=f["exclude_outliers"])
+    if df_add.empty:
+        st.info("관심 지역 데이터가 없습니다. 사이드바에서 지역·기간을 조정하세요.")
+    else:
+        opts = (
+            df_add.groupby(["gu_name", "dong", "apt_name"]).size()
+            .reset_index(name="n").sort_values("n", ascending=False)
+        )
+        opts["label"] = opts["apt_name"] + " [" + opts["gu_name"] + " " + opts["dong"] + "]"
+        label_map = {r["label"]: (r["gu_name"], r["dong"], r["apt_name"])
+                     for _, r in opts.iterrows()}
+        choice = st.selectbox("단지 검색 (관심 지역 내, 타이핑 가능)", [""] + opts["label"].tolist())
+        if choice:
+            g, d, a = label_map[choice]
+            sub = df_add[(df_add["gu_name"] == g) & (df_add["dong"] == d) & (df_add["apt_name"] == a)]
+            areas = sub["area"].round(0).astype(int).value_counts().sort_index()
+            area_pick = st.selectbox("전용면적", areas.index.tolist(),
+                                     format_func=lambda x: f"{x}m2 ({areas[x]}건)")
+            if st.button("관심 단지에 추가", type="primary"):
+                add_to_watchlist({"gu": g, "dong": d, "apt": a, "area": int(area_pick)})
+                st.rerun()
 
 st.divider()
 
-# --- 바로가기 ---
-st.markdown('<p style="font-size:0.72rem;font-weight:700;color:#2563eb;'
-            'letter-spacing:1px;">자세히 보기</p>', unsafe_allow_html=True)
-g1, g2, g3 = st.columns(3)
-if g1.button("가격 추이", use_container_width=True):
-    st.switch_page("pages/1_가격_추이.py")
-if g2.button("단지 분석", use_container_width=True):
-    st.switch_page("pages/5_단지_분석.py")
-if g3.button("전월세", use_container_width=True):
-    st.switch_page("pages/4_전월세.py")
+# --- 내 단지 평가 ---
+wl = load_watchlist()
+if not wl:
+    st.info("아직 추가한 단지가 없습니다. 위 '관심 단지 추가'에서 타겟 단지를 골라보세요.")
+else:
+    for item in wl:
+        render_complex_card(item)
+        st.divider()
+
+# --- 시장 배경 (보조) ---
+df_mkt = load_trade(gus, f["start_ym"], f["end_ym"],
+                    area=f["area"], build_year=f["build_year"], exclude_outliers=f["exclude_outliers"])
+if not df_mkt.empty:
+    agg = aggregate_by_gu_month(df_mkt)
+    pg = gus[0]
+
+    def _v(mdf, col):
+        r = mdf.loc[mdf["gu_name"] == pg, col]
+        return float(r.iloc[0]) if not r.empty else 0.0
+
+    chg = _v(calc_period_change(agg), "change_pct")
+    mom = _v(calc_recent_momentum(agg), "momentum_pct")
+    sig = signal_from_metrics(change_pct=chg, momentum_pct=mom)
+    st.caption(
+        f"시장 배경 — {pg} 시장은 '{sig['label']}' (기간 {chg:+.1f}%, 최근 {mom:+.1f}%). "
+        f"단지 평가의 비교 기준입니다."
+    )

@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 data/*.pkl
+data/watchlist.json
 .streamlit/secrets.toml
 .claude/
 budongsan-api/

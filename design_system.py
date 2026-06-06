@@ -67,9 +67,9 @@ CHART_LAYOUT = dict(
         x=0,
         font=dict(size=10),
     ),
-    margin=dict(l=40, r=8, t=30, b=20),
+    margin=dict(l=40, r=8, t=24, b=16),
     dragmode=False,
-    height=320,  # 모바일 세로 과다 방지 기본 높이 (개별 차트는 update_layout로 덮어씀)
+    height=280,  # 모바일 가로형 비율 (개별 차트는 update_layout로 덮어씀)
 )
 
 

@@ -11,7 +11,6 @@ import plotly.graph_objects as go
 
 from data_pipeline import current_filters, load_trade
 from data_processor import (
-    find_comparables_across,
     calc_apt_peak_drop,
     aggregate_by_gu_month,
     calc_period_change,
@@ -23,7 +22,7 @@ from design_system import (
 )
 from sidebar_filters import render_sidebar_filters
 from watchlist import load_watchlist, add_to_watchlist, remove_from_watchlist, key_of
-from comp_mapping import comparable_dongs, cluster_for
+from comp_mapping import comparable_dongs, cluster_for, find_comparables_across
 
 render_sidebar_filters()
 

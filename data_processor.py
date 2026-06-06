@@ -2,8 +2,6 @@ import pandas as pd
 
 from config import SEOUL_GU_CODES, AREA_CATEGORIES
 
-# exports: find_comparables_across (cross-gu comparables) — redeploy marker
-
 
 def clean_trade_data(df: pd.DataFrame) -> pd.DataFrame:
     """원시 거래 데이터를 정제한다."""
@@ -864,79 +862,6 @@ def find_comparable_complexes(
 
     df = pd.DataFrame(results).sort_values("median_sqm", ascending=False)
     # 타겟은 항상 포함, 나머지는 상위 max_results
-    target_rows = df[df["is_target"]]
-    others = df[~df["is_target"]].head(max_results)
-    return pd.concat([target_rows, others], ignore_index=True)
-
-
-def find_comparables_across(
-    df_pool: pd.DataFrame,
-    target_gu: str,
-    target_dong: str,
-    target_apt: str,
-    target_build_year: int,
-    target_area: float,
-    cluster_keys: set | None = None,
-    max_results: int = 12,
-) -> pd.DataFrame:
-    """구 경계를 넘나드는 후보 풀(df_pool)에서 비교 단지를 선별한다.
-
-    find_comparable_complexes의 멀티-구 버전. 후보는 호출측이 비교군 매핑으로
-    이미 좁혀 둔 (구, 동) 풀이라고 가정한다.
-
-    - 타겟: 같은 구·동·단지, 면적 ±15㎡, 거래 3건+ (신축도 잡히게 완화).
-    - 클러스터 멤버(cluster_keys): 연식 무관 포함 (거래 3건+).
-    - 그 외 후보: 면적 ±15㎡, 연식 ±7년, 거래 5건+.
-
-    Returns:
-        gu_name, dong, apt_name, build_year, median_price, median_sqm,
-        trade_count, change_pct, is_target 컬럼. median_sqm 내림차순.
-    """
-    if df_pool.empty:
-        return pd.DataFrame()
-
-    keys = cluster_keys or set()
-    area_low, area_high = target_area - 15, target_area + 15
-
-    def _norm(s: str) -> str:
-        return str(s).replace(" ", "").replace("(", "").replace(")", "").lower()
-
-    results = []
-    for (gu, dong, apt), group in df_pool.groupby(["gu_name", "dong", "apt_name"]):
-        area_filtered = group[(group["area"] >= area_low) & (group["area"] <= area_high)]
-        is_target = (gu == target_gu and dong == target_dong and apt == target_apt)
-        is_cluster = _norm(apt) in keys if keys else False
-
-        min_trades = 3 if (is_target or is_cluster) else 5
-        if len(area_filtered) < min_trades:
-            continue
-
-        by = area_filtered["build_year"].median()
-        if not is_target and not is_cluster:
-            if pd.isna(by) or abs(by - target_build_year) > 7:
-                continue
-
-        history = area_filtered.groupby("ym")["price"].median().sort_index()
-        change_pct = 0.0
-        if len(history) >= 2:
-            change_pct = round((history.iloc[-1] - history.iloc[0]) / history.iloc[0] * 100, 1)
-
-        results.append({
-            "gu_name": gu,
-            "dong": dong,
-            "apt_name": apt,
-            "build_year": int(by) if not pd.isna(by) else 0,
-            "median_price": int(area_filtered["price"].median()),
-            "median_sqm": round(area_filtered["price_per_sqm"].median(), 1),
-            "trade_count": len(area_filtered),
-            "change_pct": change_pct,
-            "is_target": is_target,
-        })
-
-    if not results:
-        return pd.DataFrame()
-
-    df = pd.DataFrame(results).sort_values("median_sqm", ascending=False)
     target_rows = df[df["is_target"]]
     others = df[~df["is_target"]].head(max_results)
     return pd.concat([target_rows, others], ignore_index=True)

@@ -1,5 +1,9 @@
 import streamlit as st
 
+# 배포 후 stale 모듈 캐시로 인한 ImportError 방지 — 프로젝트 import보다 먼저 실행.
+import _startup_reload
+_startup_reload.refresh()
+
 from config import API_KEY
 
 st.set_page_config(

@@ -403,7 +403,7 @@ hr {
 /* === 14. CHART CONTAINER === */
 [data-testid="stPlotlyChart"] {
     border-radius: 12px !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 [data-testid="stPlotlyChart"],
 [data-testid="stPlotlyChart"] .js-plotly-plot,

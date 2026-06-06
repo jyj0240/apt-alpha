@@ -71,7 +71,7 @@ CHART_LAYOUT = dict(
         x=0,
         font=dict(size=12),
     ),
-    margin=dict(l=48, r=14, t=30, b=24),
+    margin=dict(l=48, r=48, t=30, b=32),
     dragmode=False,
     height=300,  # 모바일 가로형 비율 (개별 차트는 update_layout로 덮어씀)
 )

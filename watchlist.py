@@ -39,7 +39,7 @@ def _save(items: list[dict]) -> None:
 def add_to_watchlist(item: dict) -> list[dict]:
     items = load_watchlist()
     if key_of(item) not in {key_of(x) for x in items}:
-        items.append(item)
+        items.insert(0, item)  # 최근 등록이 맨 위
         _save(items)
     return items
 

@@ -18,7 +18,7 @@ from design_system import (
 from sidebar_filters import render_sidebar_filters
 
 
-def _pad_x_for_labels(fig, values, frac: float = 0.18):
+def _pad_x_for_labels(fig, values, frac: float = 0.25):
     """가로 막대 바깥 값 라벨이 잘리지 않도록 x축 여유 공간."""
     vals = [float(v) for v in values if v == v]
     if not vals:

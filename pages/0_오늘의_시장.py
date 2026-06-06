@@ -121,9 +121,13 @@ def render_complex_card(item: dict):
         fig.add_trace(go.Bar(
             x=bar["median_sqm"], y=bar["lbl"], orientation="h",
             marker_color=colors,
-            text=[f"{v:.0f}" for v in bar["median_sqm"]], textposition="outside",
-            hovertemplate="<b>%{y}</b><br>%{x:.0f}만원/m2<extra></extra>",
+            text=[f"{v:,.0f}" for v in bar["median_sqm"]],
+            textposition="auto",
+            hovertemplate="<b>%{y}</b><br>%{x:,.0f}만원/m2<extra></extra>",
         ))
+        # 오른쪽 여백 확보 (outside 라벨 잘림 방지)
+        max_val = bar["median_sqm"].max()
+        fig.update_xaxes(range=[0, max_val * 1.2])
         show_chart(fig, key=f"cmp_{k}")
     else:
         verdict_card(

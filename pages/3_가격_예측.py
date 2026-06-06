@@ -3,9 +3,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config import SEOUL_GU_CODES
+from config import SEOUL_GU_CODES, DEFAULT_START_YM
 from data_collector import collect_seoul_data
 from data_processor import clean_trade_data
+from data_pipeline import analysis_window, last_complete_ym
 from predictor import AptPricePredictor
 from visualizer import sensitivity_chart
 from sidebar_filters import render_sidebar_filters
@@ -13,8 +14,13 @@ from sidebar_filters import render_sidebar_filters
 render_sidebar_filters()
 st.header("아파트 가격 예측")
 
-start_ym = st.session_state.get("start_ym", "202401")
-end_ym = st.session_state.get("end_ym", "202412")
+start_ym = st.session_state.get("start_ym", DEFAULT_START_YM)
+end_ym = st.session_state.get("end_ym", last_complete_ym())
+
+# 서울 전체로 모델을 학습하는 무거운 페이지 — 기간이 길면 최근 4년으로 축소
+start_ym, _capped = analysis_window(start_ym, end_ym)
+if _capped:
+    st.caption(f"학습 속도를 위해 최근 4년({start_ym[:4]}.{start_ym[4:6]}~) 데이터로 학습합니다.")
 
 
 # 학습 데이터 로드

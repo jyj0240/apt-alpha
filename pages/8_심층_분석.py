@@ -4,8 +4,9 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-from config import GU_NAME_TO_CODE
+from config import GU_NAME_TO_CODE, DEFAULT_GUS, DEFAULT_START_YM
 from data_collector import collect_seoul_data, collect_seoul_rent_data
+from data_pipeline import analysis_window, last_complete_ym
 from data_processor import (
     clean_trade_data,
     clean_rent_data,
@@ -33,15 +34,20 @@ from sidebar_filters import render_sidebar_filters
 render_sidebar_filters()
 st.header("심층 분석")
 
-selected_gus = st.session_state.get("selected_gus", [])
-start_ym = st.session_state.get("start_ym", "202401")
-end_ym = st.session_state.get("end_ym", "202412")
+selected_gus = st.session_state.get("selected_gus", list(DEFAULT_GUS))
+start_ym = st.session_state.get("start_ym", DEFAULT_START_YM)
+end_ym = st.session_state.get("end_ym", last_complete_ym())
 selected_area = st.session_state.get("selected_area", "전체")
 selected_build_year = st.session_state.get("selected_build_year", "전체")
 
 if not selected_gus:
     st.info("사이드바에서 구를 선택하세요.")
     st.stop()
+
+# 시계열 분해·롤링변동성·MDD 등 무거운 분석 — 기간이 길면 최근 4년으로 축소
+start_ym, _capped = analysis_window(start_ym, end_ym)
+if _capped:
+    st.caption(f"분석 속도를 위해 최근 4년({start_ym[:4]}.{start_ym[4:6]}~)만 사용합니다.")
 
 
 @st.cache_data(show_spinner="데이터 수집 중...")

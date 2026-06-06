@@ -37,6 +37,36 @@ def _codes(gus) -> tuple[str, ...]:
     return tuple(sorted(GU_NAME_TO_CODE[g] for g in gus if g in GU_NAME_TO_CODE))
 
 
+def last_complete_ym() -> str:
+    """직전 '완료월'(이번 달 -1)을 YYYYMM으로 반환."""
+    return (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y%m")
+
+
+def _ym_index(ym: str) -> int:
+    """YYYYMM → 월 인덱스(year*12 + month-1)."""
+    return int(ym[:4]) * 12 + (int(ym[4:6]) - 1)
+
+
+def analysis_window(start_ym: str, end_ym: str, max_months: int = 48) -> tuple[str, bool]:
+    """무거운 분석용 기간 상한.
+
+    조회 기간이 max_months(기본 48개월=4년)보다 길면 시작월을 끌어올려
+    최근 max_months만 사용한다. 팩터 회귀·ML 학습·시계열 분해처럼 데이터량에
+    비례해 무거워지는 페이지에서 속도를 확보하기 위함.
+
+    Returns:
+        (조정된_start_ym, capped) — capped=True면 기간이 축소됐음.
+    """
+    try:
+        span = _ym_index(end_ym) - _ym_index(start_ym)
+    except (ValueError, IndexError):
+        return start_ym, False
+    if span <= max_months:
+        return start_ym, False
+    new_idx = _ym_index(end_ym) - max_months
+    return f"{new_idx // 12}{new_idx % 12 + 1:02d}", True
+
+
 @st.cache_data(show_spinner="데이터 수집 중...")
 def _collect_trade(codes: tuple | None, s_ym: str, e_ym: str):
     """매매 원시 데이터 수집 (캐시). codes=None이면 서울 전체."""
@@ -55,11 +85,10 @@ def current_filters() -> dict:
     홈/사이드바에서 설정한 값을 페이지가 일관되게 꺼내 쓰기 위한 단일 진입점.
     """
     ss = st.session_state
-    last_complete = (datetime.today().replace(day=1) - timedelta(days=1)).strftime("%Y%m")
     return {
         "gus": ss.get("selected_gus", list(DEFAULT_GUS)),
         "start_ym": ss.get("start_ym", DEFAULT_START_YM),
-        "end_ym": ss.get("end_ym", last_complete),
+        "end_ym": ss.get("end_ym", last_complete_ym()),
         "area": ss.get("selected_area", DEFAULT_AREA),
         "build_year": ss.get("selected_build_year", "전체"),
         "exclude_outliers": ss.get("exclude_outliers", True),

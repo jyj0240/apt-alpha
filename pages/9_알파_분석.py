@@ -43,13 +43,21 @@ st.markdown("""
 알파가 양수면 시장보다 잘한 것, 음수면 시장보다 못한 것입니다.
 """)
 
-selected_gus = st.session_state.get("selected_gus", [])
-start_ym = st.session_state.get("start_ym", "202401")
-end_ym = st.session_state.get("end_ym", "202412")
+from config import DEFAULT_GUS, DEFAULT_START_YM
+from data_pipeline import analysis_window, last_complete_ym
+
+selected_gus = st.session_state.get("selected_gus", list(DEFAULT_GUS))
+start_ym = st.session_state.get("start_ym", DEFAULT_START_YM)
+end_ym = st.session_state.get("end_ym", last_complete_ym())
 
 if not selected_gus:
     st.info("사이드바에서 구를 선택하세요.")
     st.stop()
+
+# 서울 전체를 팩터로 쓰는 무거운 회귀 — 기간이 길면 최근 4년으로 축소
+start_ym, _capped = analysis_window(start_ym, end_ym)
+if _capped:
+    st.caption(f"분석 속도를 위해 최근 4년({start_ym[:4]}.{start_ym[4:6]}~)만 사용합니다.")
 
 # --- 데이터 로드 (서울 전체 필요 — 베타 팩터 구축용) ---
 @st.cache_data(show_spinner="서울 전체 데이터 수집 중 (팩터 구축용)...")

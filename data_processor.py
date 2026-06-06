@@ -2,6 +2,8 @@ import pandas as pd
 
 from config import SEOUL_GU_CODES, AREA_CATEGORIES
 
+# exports: find_comparables_across (cross-gu comparables) — redeploy marker
+
 
 def clean_trade_data(df: pd.DataFrame) -> pd.DataFrame:
     """원시 거래 데이터를 정제한다."""

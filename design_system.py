@@ -360,7 +360,15 @@ def verdict_card(headline: str, sub: str | None = None,
     """
     import streamlit as st
     color = signal["color"] if signal else COLORS["primary"]
-    emoji = (signal["emoji"] + " ") if signal else ""
+    # 색맹·대비 안전: 색(pill 배경) + 이모지 + 텍스트 라벨 3중 코딩
+    badge_html = ""
+    if signal:
+        badge_html = (
+            f'<span style="display:inline-block;background:{color};color:#ffffff;'
+            f'font-size:0.72rem;font-weight:800;padding:3px 11px;border-radius:999px;'
+            f'margin-bottom:8px;letter-spacing:0.3px;">'
+            f'{signal["emoji"]} {signal["label"]}</span>'
+        )
     sub_html = (
         f'<div style="color:{COLORS["text_secondary"]};font-size:0.82rem;'
         f'margin-top:4px;">{sub}</div>' if sub else ""
@@ -369,8 +377,9 @@ def verdict_card(headline: str, sub: str | None = None,
         f"""
         <div style="background:{COLORS['surface_alt']};border:1px solid {COLORS['border']};
              border-left:4px solid {color};border-radius:12px;padding:14px 16px;margin:6px 0 12px 0;">
+            {badge_html}
             <div style="font-size:1.05rem;font-weight:700;color:{COLORS['text_primary']};
-                 line-height:1.45;">{emoji}{headline}</div>
+                 line-height:1.45;">{headline}</div>
             {sub_html}
         </div>
         """,

@@ -149,6 +149,15 @@ def render_sidebar_filters() -> dict:
         st.session_state["selected_build_year"] = selected_build_year
         st.session_state["exclude_outliers"] = exclude_outliers
 
+        # 전문가 모드 — 알파/베타/변동성 등 Pro 지표 펼침 제어
+        pro_mode = st.toggle(
+            "전문가 모드",
+            value=st.session_state.get("pro_mode", False),
+            key="sb_pro_mode",
+            help="끄면 쉬운 핵심만, 켜면 알파·베타·변동성 등 전문 지표까지 펼쳐 보여줍니다.",
+        )
+        st.session_state["pro_mode"] = pro_mode
+
         st.divider()
 
         # 데이터 갱신 버튼 + 캐시 상태

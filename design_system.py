@@ -84,6 +84,7 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         tickangle=0,
         title_font=dict(size=10),
         nticks=8,
+        fixedrange=True,  # 모바일 터치 줌/드래그 차단 (hover는 유지)
     )
     fig.update_yaxes(
         gridcolor=COLORS["grid"],
@@ -93,6 +94,7 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         tickfont=dict(size=9),
         title_font=dict(size=10),
         title_standoff=5,
+        fixedrange=True,  # 모바일 터치 줌/드래그 차단
     )
     return fig
 
@@ -116,8 +118,17 @@ PLOTLY_CONFIG = {
 
 
 def show_chart(fig, **kwargs):
-    """st.plotly_chart 래퍼 — 줌/드래그 비활성화 config 자동 적용."""
+    """st.plotly_chart 래퍼 — 줌/드래그 비활성화 config 자동 적용.
+
+    모바일 터치 핀치/드래그 줌을 막기 위해 양 축에 fixedrange=True를 강제한다.
+    (hover 툴팁은 그대로 유지됨.) 지도(mapbox) 등 직교 축이 없는 차트는 무시된다.
+    """
     import streamlit as st
+    try:
+        fig.update_xaxes(fixedrange=True)
+        fig.update_yaxes(fixedrange=True)
+    except Exception:
+        pass
     kwargs.setdefault("use_container_width", True)
     kwargs.setdefault("config", PLOTLY_CONFIG)
     st.plotly_chart(fig, **kwargs)

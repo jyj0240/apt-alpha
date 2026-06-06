@@ -1,14 +1,13 @@
+"""가격 추이 — 답 먼저 + 전문가 접기 패턴 (개편 v1, docs/REDESIGN.md).
+
+일반 사용자: 판정 카드 + 핵심 숫자 + 추이 차트 + 동별 비교.
+전문가 모드(사이드바 토글): 랭킹·변동성 히트맵·동별 격차·원시 데이터 펼침.
+"""
+
 import streamlit as st
 
-from config import GU_NAME_TO_CODE
-from data_collector import collect_seoul_data
-from sidebar_filters import render_sidebar_filters
+from data_pipeline import current_filters, load_trade
 from data_processor import (
-    clean_trade_data,
-    add_area_category,
-    filter_by_area,
-    filter_by_build_year,
-    filter_outliers,
     aggregate_by_gu_month,
     aggregate_by_dong_month,
     calc_period_change,
@@ -19,8 +18,8 @@ from data_processor import (
     generate_insight_text,
 )
 from design_system import (
-    COLORS, CATEGORICAL_10, create_figure, format_price, format_pct,
-    calc_table_height, show_chart,
+    verdict_card, signal_from_metrics, hero_metrics, pro_section,
+    show_chart, format_pct, calc_table_height,
 )
 from visualizer import (
     price_trend_chart,
@@ -28,45 +27,30 @@ from visualizer import (
     trade_volume_chart,
     ranking_bar_chart,
     volatility_heatmap,
+    dong_comparison_chart,
 )
-import plotly.graph_objects as go
+from sidebar_filters import render_sidebar_filters
 
 render_sidebar_filters()
 
-selected_gus = st.session_state.get("selected_gus", [])
-start_ym = st.session_state.get("start_ym", "202401")
-end_ym = st.session_state.get("end_ym", "202412")
-selected_area = st.session_state.get("selected_area", "전체")
-selected_build_year = st.session_state.get("selected_build_year", "전체")
-
+f = current_filters()
+selected_gus = f["gus"]
 if not selected_gus:
-    st.info("홈에서 관심 지역을 선택하세요.")
+    st.info("홈 또는 사이드바에서 관심 지역을 선택하세요.")
     st.stop()
 
-# --- 데이터 ---
-@st.cache_data(show_spinner="데이터 수집 중...")
-def get_data(gus, s_ym, e_ym):
-    codes = [GU_NAME_TO_CODE[g] for g in gus if g in GU_NAME_TO_CODE]
-    return collect_seoul_data(s_ym, e_ym, codes)
-
-raw_df = get_data(selected_gus, start_ym, end_ym)
-if raw_df.empty:
-    st.warning("데이터가 없습니다.")
-    st.stop()
-
-df = clean_trade_data(raw_df)
-df = add_area_category(df)
-df = filter_by_area(df, selected_area)
-df = filter_by_build_year(df, selected_build_year)
-df = filter_outliers(df, st.session_state.get("exclude_outliers", True))
-
+df = load_trade(
+    selected_gus, f["start_ym"], f["end_ym"],
+    area=f["area"], build_year=f["build_year"],
+    exclude_outliers=f["exclude_outliers"],
+)
 if df.empty:
     st.warning("해당 조건의 데이터가 없습니다.")
     st.stop()
 
 gu_agg = aggregate_by_gu_month(df)
 
-# --- KPI ---
+# --- 지표 계산 ---
 change_df = calc_period_change(gu_agg)
 momentum_df = calc_recent_momentum(gu_agg)
 premium_df = calc_relative_premium(gu_agg)
@@ -74,56 +58,44 @@ vol_df = calc_volatility(gu_agg)
 
 primary_gu = selected_gus[0]
 
-def _get_val(metric_df, col, gu):
-    row = metric_df.loc[metric_df["gu_name"] == gu, col]
-    return row.iloc[0] if not row.empty else 0.0
 
-change_val = _get_val(change_df, "change_pct", primary_gu)
-momentum_val = _get_val(momentum_df, "momentum_pct", primary_gu)
-premium_val = _get_val(premium_df, "premium_pct", primary_gu)
-vol_val = _get_val(vol_df, "volatility", primary_gu)
+def _val(metric_df, col):
+    row = metric_df.loc[metric_df["gu_name"] == primary_gu, col]
+    return float(row.iloc[0]) if not row.empty else 0.0
 
-# 헤더 + KPI 인라인
+
+change_val = _val(change_df, "change_pct")
+momentum_val = _val(momentum_df, "momentum_pct")
+premium_val = _val(premium_df, "premium_pct")
+vol_val = _val(vol_df, "volatility")
+
+# --- 1층: 판정 카드 ---
 gu_label = " / ".join(selected_gus)
 st.markdown(f"### {gu_label}")
 
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("거래", f"{len(df):,}건")
-k2.metric("상승률", f"{change_val:+.1f}%")
-k3.metric("모멘텀", f"{momentum_val:+.1f}%")
-k4.metric("프리미엄", f"{premium_val:+.1f}%")
+sig = signal_from_metrics(change_pct=change_val, momentum_pct=momentum_val)
+headline = f"{primary_gu}는 지금 '{sig['label']}' 흐름입니다."
+sub = generate_insight_text(primary_gu, change_val, momentum_val, premium_val, vol_val)
+verdict_card(headline, sub=sub, signal=sig)
 
-# 인사이트
-insight = generate_insight_text(primary_gu, change_val, momentum_val, premium_val, vol_val)
-st.caption(insight)
+# --- 2층: 핵심 숫자 ---
+hero_metrics([
+    ("거래", f"{len(df):,}건"),
+    ("기간 상승률", format_pct(change_val)),
+    ("최근 상승세", format_pct(momentum_val)),
+    ("서울 평균 대비", format_pct(premium_val)),
+])
 
 st.divider()
 
-# --- 메인 차트 (탭) ---
-t1, t2, t3, t4, t5 = st.tabs(["실거래가", "m2당가", "거래량", "랭킹", "히트맵"])
-
+# --- 메인 차트 (일상: 실거래가 / m2당가 / 거래량) ---
+t1, t2, t3 = st.tabs(["실거래가", "m2당가", "거래량"])
 with t1:
-    show_chart(price_trend_chart(gu_agg, selected_gus),
-                    use_container_width=True, key="c_trend")
-
+    show_chart(price_trend_chart(gu_agg, selected_gus), key="c_trend")
 with t2:
-    show_chart(price_per_sqm_chart(gu_agg, selected_gus),
-                    use_container_width=True, key="c_sqm")
-
+    show_chart(price_per_sqm_chart(gu_agg, selected_gus), key="c_sqm")
 with t3:
-    show_chart(trade_volume_chart(gu_agg, selected_gus),
-                    use_container_width=True, key="c_vol")
-
-with t4:
-    if not change_df.empty:
-        show_chart(
-            ranking_bar_chart(change_df, "change_pct",
-                              title="구별 상승률 (%)", value_label="상승률 (%)"),
-            use_container_width=True, key="c_rank")
-
-with t5:
-    show_chart(volatility_heatmap(gu_agg, selected_gus),
-                    use_container_width=True, key="c_heat")
+    show_chart(trade_volume_chart(gu_agg, selected_gus), key="c_vol")
 
 st.divider()
 
@@ -131,24 +103,23 @@ st.divider()
 st.markdown("#### 동별 비교")
 dong_gu = st.selectbox("구", selected_gus, key="dong_gu", label_visibility="collapsed")
 dong_agg = aggregate_by_dong_month(df)
+show_chart(dong_comparison_chart(dong_agg, dong_gu), key="c_dong")
 
-# 동별 바차트를 직접 그리기 (visualizer 함수 대신 — 더 컴팩트)
-from visualizer import dong_comparison_chart
-show_chart(dong_comparison_chart(dong_agg, dong_gu),
-                use_container_width=True, key="c_dong")
+# --- 전문가 지표 (Pro 모드에서 펼침) ---
+with pro_section("랭킹 · 변동성 · 상세 데이터"):
+    pt1, pt2, pt3, pt4 = st.tabs(["상승률 랭킹", "변동성 히트맵", "동별 격차", "원시 데이터"])
 
-# --- 테이블 (expander) ---
-with st.expander("상세 데이터"):
-    tab_a, tab_b, tab_c = st.tabs(["변동성", "동별 격차", "원시 데이터"])
+    with pt1:
+        if not change_df.empty:
+            show_chart(
+                ranking_bar_chart(change_df, "change_pct",
+                                  title="구별 상승률 (%)", value_label="상승률 (%)"),
+                key="c_rank")
 
-    with tab_a:
-        if not vol_df.empty:
-            st.dataframe(
-                vol_df.rename(columns={"gu_name": "구", "volatility": "변동성%"}),
-                use_container_width=True, hide_index=True,
-            )
+    with pt2:
+        show_chart(volatility_heatmap(gu_agg, selected_gus), key="c_heat")
 
-    with tab_b:
+    with pt3:
         gap_df = get_dong_gap_summary(df)
         if not gap_df.empty:
             st.dataframe(
@@ -159,10 +130,11 @@ with st.expander("상세 데이터"):
                 use_container_width=True, hide_index=True,
             )
 
-    with tab_c:
+    with pt4:
         cols = ["gu_name", "dong", "apt_name", "area", "floor", "price", "price_per_sqm", "date"]
         avail = [c for c in cols if c in df.columns]
         st.dataframe(
             df[avail].sort_values("date", ascending=False).head(300),
             use_container_width=True, hide_index=True,
+            height=calc_table_height(min(len(df), 12)),
         )

@@ -132,9 +132,10 @@ def trade_volume_chart(agg_df: pd.DataFrame, gu_names: list[str]) -> go.Figure:
             opacity=0.85,
         ))
 
-    # 월별 총합 annotation (구가 2개 이상일 때)
-    if len(gu_names) > 1:
-        totals = filtered.groupby("ym")["trade_count"].sum()
+    # 월별 총합 annotation — 기간이 길면 숫자가 겹쳐 읽을 수 없으므로
+    # 개월 수가 충분히 적을 때만 표시한다. (긴 기간의 정확값은 hover로 확인)
+    totals = filtered.groupby("ym")["trade_count"].sum()
+    if len(gu_names) > 1 and len(totals) <= 18:
         for ym, total in totals.items():
             fig.add_annotation(
                 x=ym, y=total,

@@ -304,3 +304,119 @@ def add_reference_line(fig: go.Figure, orientation: str = "h",
         fig.add_vline(x=value, line_dash=dash, line_color=color,
                       annotation_text=label, annotation_font_color=color)
     return fig
+
+
+# ---------------------------------------------------------------------------
+# 6. "답 먼저" UX 컴포넌트 (개편 v1 — docs/REDESIGN.md 참고)
+#    일반 사용자 우선: 판정 카드 · 핵심 숫자 · Pro 접기 · 용어 번역
+# ---------------------------------------------------------------------------
+
+# 시장 신호등: 3단계 (과열 / 보합 / 조정)
+SIGNALS = {
+    "hot":     {"emoji": "🔥", "label": "과열",  "color": COLORS["down"]},
+    "neutral": {"emoji": "⚖️", "label": "보합",  "color": COLORS["neutral"]},
+    "cool":    {"emoji": "❄️", "label": "조정",  "color": COLORS["primary"]},
+}
+
+
+def signal_from_metrics(change_pct: float = 0.0, momentum_pct: float = 0.0,
+                        premium_pct: float | None = None,
+                        volatility: float | None = None) -> dict:
+    """지표 → 시장 신호등 매핑.
+
+    임계값은 초안이며 추후 튜닝 대상 (docs/REDESIGN.md §9).
+    Returns: {"key", "emoji", "label", "color"}
+    """
+    c = change_pct or 0.0
+    m = momentum_pct or 0.0
+    if m > 3 and c > 3:
+        key = "hot"
+    elif m < -3 or c < -5:
+        key = "cool"
+    else:
+        key = "neutral"
+    return {"key": key, **SIGNALS[key]}
+
+
+def verdict_card(headline: str, sub: str | None = None,
+                 signal: dict | None = None) -> None:
+    """페이지 최상단 '한 문장 판정' 카드를 렌더한다.
+
+    Args:
+        headline: 큰 글씨 한 문장 판정.
+        sub: 근거 보조 문장 (선택).
+        signal: signal_from_metrics() 결과 (선택). 좌측 강조색/이모지에 사용.
+    """
+    import streamlit as st
+    color = signal["color"] if signal else COLORS["primary"]
+    emoji = (signal["emoji"] + " ") if signal else ""
+    sub_html = (
+        f'<div style="color:{COLORS["text_secondary"]};font-size:0.82rem;'
+        f'margin-top:4px;">{sub}</div>' if sub else ""
+    )
+    st.markdown(
+        f"""
+        <div style="background:{COLORS['surface_alt']};border:1px solid {COLORS['border']};
+             border-left:4px solid {color};border-radius:12px;padding:14px 16px;margin:6px 0 12px 0;">
+            <div style="font-size:1.05rem;font-weight:700;color:{COLORS['text_primary']};
+                 line-height:1.45;">{emoji}{headline}</div>
+            {sub_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def hero_metrics(items: list[tuple]) -> None:
+    """핵심 숫자 1~4개를 일관된 KPI 카드로 렌더한다.
+
+    Args:
+        items: (label, value) 또는 (label, value, delta) 튜플 리스트.
+    """
+    import streamlit as st
+    if not items:
+        return
+    cols = st.columns(len(items))
+    for col, item in zip(cols, items):
+        label, value = item[0], item[1]
+        delta = item[2] if len(item) > 2 else None
+        col.metric(label, value, delta)
+
+
+def is_pro_mode() -> bool:
+    """전문가 모드 여부 (사이드바 토글 → session_state['pro_mode'])."""
+    import streamlit as st
+    return bool(st.session_state.get("pro_mode", False))
+
+
+def pro_section(title: str = "전문가 지표"):
+    """Pro 지표를 담는 expander를 반환한다.
+
+    항상 화면에 존재하되, 일반 모드에서는 접혀 있고 전문가 모드에서는 펼쳐진다.
+    사용 예:
+        with pro_section("변동성·베타"):
+            st.dataframe(...)
+    """
+    import streamlit as st
+    return st.expander(f"⚙️ {title}", expanded=is_pro_mode())
+
+
+# 전문용어 → 사용자 라벨 사전 (M7에서 전 페이지 일괄 적용)
+TERMS = {
+    "alpha": "단지 고유 경쟁력",
+    "beta": "시장 민감도",
+    "r_squared": "시장 설명력",
+    "momentum": "최근 상승세",
+    "volatility": "가격 출렁임",
+    "mdd": "고점 대비 최대 하락",
+    "value": "가격 매력도",
+    "liquidity": "거래 활발도",
+    "safety": "안정성",
+    "premium": "서울 평균 대비",
+    "jeonse_ratio": "전세가율",
+}
+
+
+def term(key: str, default: str | None = None) -> str:
+    """전문용어 키를 사용자 친화 라벨로 변환한다."""
+    return TERMS.get(key, default if default is not None else key)

@@ -107,13 +107,29 @@ hr { border-color: #e2e8f0 !important; margin: 1.5rem 0 !important; }
 
 /* === 차트 위 스크롤 매끄럽게 ===
    plotly 드래그 레이어가 터치/스크롤 제스처를 가로채 페이지 스크롤이 끊기는 문제 방지.
-   세로 스크롤(pan-y)은 브라우저에 넘기고, hover 툴팁은 그대로 유지된다. */
+   세로 스크롤(pan-y)은 브라우저에 넘긴다. */
 [data-testid="stPlotlyChart"],
 [data-testid="stPlotlyChart"] .js-plotly-plot,
 [data-testid="stPlotlyChart"] .plotly,
 [data-testid="stPlotlyChart"] .nsewdrag,
 [data-testid="stPlotlyChart"] .drag {
     touch-action: pan-y !important;
+}
+
+/* 터치 기기(모바일)에서는 plotly 드래그 레이어가 터치를 아예 잡지 않게 해
+   손가락 드래그가 곧바로 페이지 스크롤이 되도록 한다. (마우스 기기는 hover 유지) */
+@media (pointer: coarse) {
+    [data-testid="stPlotlyChart"] .nsewdrag,
+    [data-testid="stPlotlyChart"] .draglayer,
+    [data-testid="stPlotlyChart"] .drag,
+    [data-testid="stPlotlyChart"] .draglayer .drag {
+        pointer-events: none !important;
+        touch-action: pan-y !important;
+    }
+    [data-testid="stPlotlyChart"] .js-plotly-plot,
+    [data-testid="stPlotlyChart"] .svg-container {
+        touch-action: pan-y !important;
+    }
 }
 
 /* === 히어로 / 카드 === */

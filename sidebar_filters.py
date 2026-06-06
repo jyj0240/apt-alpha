@@ -26,8 +26,8 @@ def _default_yms() -> tuple[str, str]:
 def render_sidebar_filters() -> dict:
     with st.sidebar:
         st.markdown(
-            "<p style='color:#2563eb; font-weight:700; font-size:0.8rem; "
-            "letter-spacing:1px; margin-bottom:10px;'>FILTERS</p>",
+            "<p style='color:#2563eb; font-weight:900; font-size:0.8125rem; "
+            "letter-spacing:0.08em; text-transform:uppercase; margin-bottom:14px;'>FILTERS</p>",
             unsafe_allow_html=True,
         )
 
@@ -165,8 +165,8 @@ def render_sidebar_filters() -> dict:
         status = get_cache_status()
 
         st.markdown(
-            "<p style='color:#2563eb; font-weight:700; font-size:0.8rem; "
-            "letter-spacing:1px; margin-bottom:8px;'>DATA</p>",
+            "<p style='color:#2563eb; font-weight:900; font-size:0.8125rem; "
+            "letter-spacing:0.08em; text-transform:uppercase; margin-bottom:12px;'>DATA</p>",
             unsafe_allow_html=True,
         )
 
@@ -183,7 +183,7 @@ def render_sidebar_filters() -> dict:
             st.rerun()
 
         st.markdown(
-            "<p style='font-size:0.65rem; color:#94a3b8; margin-top:4px;'>"
+            "<p style='font-size:0.75rem; color:#94a3b8; margin-top:6px;'>"
             "당월: 1일 / 전월: 7일 / 2개월+: 영구 캐시</p>",
             unsafe_allow_html=True,
         )

@@ -373,22 +373,34 @@ def aggregate_rent_by_gu_month(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def calc_jeonse_ratio(
-    trade_agg: pd.DataFrame, rent_agg: pd.DataFrame
+    trade_agg: pd.DataFrame, rent_agg: pd.DataFrame,
+    min_trade: int = 5, min_rent: int = 3,
 ) -> pd.DataFrame:
     """구별/월별 전세가율을 계산한다 (전세 중위보증금 / 매매 중위가격).
+
+    매매 또는 전세 거래가 극소수인 월은 중위값이 왜곡되므로 제외한다.
+    (예: 매매 1건 vs 전세 200건 → 전세가율 100% 초과 발생)
+
+    Args:
+        min_trade: 매매 최소 거래 건수 (기본 5건).
+        min_rent: 전세 최소 거래 건수 (기본 3건).
 
     Returns:
         gu_name, ym, jeonse_ratio(%) 컬럼이 있는 DataFrame.
     """
-    jeonse = rent_agg[rent_agg["rent_type"] == "전세"][
-        ["gu_name", "ym", "median_deposit"]
-    ].copy()
+    jeonse = rent_agg[rent_agg["rent_type"] == "전세"].copy()
+    jeonse_cols = ["gu_name", "ym", "median_deposit"]
+    if "rent_count" in jeonse.columns:
+        jeonse = jeonse[jeonse["rent_count"] >= min_rent]
+    jeonse = jeonse[jeonse_cols]
 
-    merged = jeonse.merge(
-        trade_agg[["gu_name", "ym", "median_price"]],
-        on=["gu_name", "ym"],
-        how="inner",
-    )
+    trade_cols = ["gu_name", "ym", "median_price"]
+    trade_filtered = trade_agg.copy()
+    if "trade_count" in trade_filtered.columns:
+        trade_filtered = trade_filtered[trade_filtered["trade_count"] >= min_trade]
+    trade_filtered = trade_filtered[trade_cols]
+
+    merged = jeonse.merge(trade_filtered, on=["gu_name", "ym"], how="inner")
 
     merged["jeonse_ratio"] = (
         merged["median_deposit"] / merged["median_price"] * 100

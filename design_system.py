@@ -57,19 +57,23 @@ CHART_LAYOUT = dict(
     template="plotly_white",
     paper_bgcolor=COLORS["surface"],
     plot_bgcolor=COLORS["surface"],
-    font=dict(color=COLORS["text_primary"], size=11),
+    font=dict(
+        family="Pretendard Variable, Pretendard, -apple-system, sans-serif",
+        color=COLORS["text_primary"],
+        size=13,
+    ),
     legend=dict(
-        bgcolor="rgba(255,255,255,0.8)",
+        bgcolor="rgba(255,255,255,0.9)",
         orientation="h",
         yanchor="bottom",
         y=1.02,
         xanchor="left",
         x=0,
-        font=dict(size=10),
+        font=dict(size=12),
     ),
-    margin=dict(l=40, r=8, t=24, b=16),
+    margin=dict(l=48, r=14, t=30, b=24),
     dragmode=False,
-    height=280,  # 모바일 가로형 비율 (개별 차트는 update_layout로 덮어씀)
+    height=300,  # 모바일 가로형 비율 (개별 차트는 update_layout로 덮어씀)
 )
 
 
@@ -81,9 +85,9 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         zerolinecolor=COLORS["zeroline"],
         showgrid=True,
         linecolor=COLORS["axis_line"],
-        tickfont=dict(size=9),
+        tickfont=dict(size=11),
         tickangle=0,
-        title_font=dict(size=10),
+        title_font=dict(size=12),
         nticks=8,
         fixedrange=True,  # 모바일 터치 줌/드래그 차단 (hover는 유지)
     )
@@ -92,8 +96,8 @@ def apply_theme(fig: go.Figure) -> go.Figure:
         zerolinecolor=COLORS["zeroline"],
         showgrid=True,
         linecolor=COLORS["axis_line"],
-        tickfont=dict(size=9),
-        title_font=dict(size=10),
+        tickfont=dict(size=11),
+        title_font=dict(size=12),
         title_standoff=5,
         fixedrange=True,  # 모바일 터치 줌/드래그 차단
     )
@@ -352,36 +356,40 @@ def signal_from_metrics(change_pct: float = 0.0, momentum_pct: float = 0.0,
 
 def verdict_card(headline: str, sub: str | None = None,
                  signal: dict | None = None) -> None:
-    """페이지 최상단 '한 문장 판정' 카드를 렌더한다.
+    """페이지 최상단 '한 문장 판정' 카드를 렌더한다 — 히어로 요소.
 
     Args:
         headline: 큰 글씨 한 문장 판정.
         sub: 근거 보조 문장 (선택).
-        signal: signal_from_metrics() 결과 (선택). 좌측 강조색/이모지에 사용.
+        signal: signal_from_metrics() 결과 (선택). 좌측 강조색/배지에 사용.
     """
     import streamlit as st
     color = signal["color"] if signal else COLORS["primary"]
-    # 색맹·대비 안전: 색(pill 배경) + 이모지 + 텍스트 라벨 3중 코딩
+    # 색맹·대비 안전: 색(pill 배경) + 텍스트 라벨 이중 코딩
     badge_html = ""
     if signal:
         badge_html = (
             f'<span style="display:inline-block;background:{color};color:#ffffff;'
-            f'font-size:0.72rem;font-weight:800;padding:3px 11px;border-radius:999px;'
-            f'margin-bottom:8px;letter-spacing:0.3px;">'
+            f'font-size:0.8125rem;font-weight:800;padding:5px 16px;border-radius:999px;'
+            f'margin-bottom:12px;letter-spacing:0.03em;'
+            f'box-shadow:0 2px 6px rgba(0,0,0,0.15);">'
             f'{signal["label"]}</span>'
         )
     sub_html = (
-        f'<div style="color:{COLORS["text_secondary"]};font-size:0.82rem;'
-        f'margin-top:4px;">{sub}</div>' if sub else ""
+        f'<div style="color:{COLORS["text_secondary"]};font-size:0.9375rem;'
+        f'margin-top:8px;line-height:1.6;">{sub}</div>' if sub else ""
     )
     # 주의: 마크다운이 들여쓴 줄을 코드블록으로 오인해 HTML을 날것으로 출력하므로
     # 들여쓰기 없이 한 줄로 조립한다.
     html = (
-        f'<div style="background:{COLORS["surface_alt"]};border:1px solid {COLORS["border"]};'
-        f'border-left:4px solid {color};border-radius:12px;padding:14px 16px;margin:6px 0 12px 0;">'
+        f'<div style="background:linear-gradient(135deg, {COLORS["surface_alt"]} 0%, #ffffff 100%);'
+        f'border:1px solid {COLORS["border"]};'
+        f'border-left:5px solid {color};border-radius:14px;'
+        f'padding:22px 26px;margin:10px 0 20px 0;'
+        f'box-shadow:0 4px 16px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03);">'
         f'{badge_html}'
-        f'<div style="font-size:1.05rem;font-weight:700;color:{COLORS["text_primary"]};'
-        f'line-height:1.45;">{headline}</div>'
+        f'<div style="font-size:1.25rem;font-weight:900;color:{COLORS["text_primary"]};'
+        f'line-height:1.4;letter-spacing:-0.02em;">{headline}</div>'
         f'{sub_html}'
         f'</div>'
     )

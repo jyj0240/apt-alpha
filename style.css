@@ -1,0 +1,548 @@
+/* ============================================================
+   APT Alpha Design System v2
+   Font: Pretendard Variable (Korean-optimized)
+   Scale: Major Third (1.25) from 17px base
+   Palette: Tailwind Slate + Blue-600 primary
+   ============================================================ */
+
+/* === 1. FOUNDATION: Font & Base === */
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stSidebar"], .stMarkdown, .stTextInput,
+[data-testid="stMetric"], .stSelectbox, .stMultiSelect {
+    font-family: "Pretendard Variable", Pretendard, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 17px !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+}
+
+/* === 2. TYPOGRAPHY HIERARCHY === */
+h1 {
+    font-size: 1.875rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0.5rem !important;
+}
+h2 {
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.3 !important;
+    margin-top: 1.75rem !important;
+    margin-bottom: 0.625rem !important;
+}
+h3 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    letter-spacing: -0.015em !important;
+    line-height: 1.35 !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0.4rem !important;
+}
+h4 {
+    font-size: 1.0625rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    line-height: 1.4 !important;
+    margin-top: 0.875rem !important;
+    margin-bottom: 0.3rem !important;
+}
+p, li, span, .stMarkdown {
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+    color: #1e293b !important;
+}
+label {
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    letter-spacing: 0.01em !important;
+}
+/* Streamlit caption */
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] p {
+    font-size: 0.875rem !important;
+    color: #64748b !important;
+    line-height: 1.55 !important;
+}
+
+/* === 3. LAYOUT & SPACING === */
+.block-container {
+    max-width: 100% !important;
+    padding: 1.5rem 3rem !important;
+}
+/* Section breathing room: extra margin around dividers */
+hr {
+    border: none !important;
+    border-top: 1px solid #e2e8f0 !important;
+    margin: 2rem 0 !important;
+}
+/* === 4. SIDEBAR === */
+[data-testid="stSidebar"] {
+    background: #f8fafc !important;
+    border-right: 1px solid #e2e8f0 !important;
+}
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    padding-top: 0.5rem;
+}
+[data-testid="stSidebarNav"] a {
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+    padding: 11px 16px !important;
+    border-radius: 10px !important;
+    margin: 3px 6px !important;
+    color: #334155 !important;
+    transition: all 0.18s ease !important;
+    letter-spacing: -0.01em !important;
+}
+[data-testid="stSidebarNav"] a:hover {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    transform: translateX(2px) !important;
+}
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* === 5. KPI METRIC CARDS === */
+[data-testid="stMetric"] {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 18px 20px 16px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+[data-testid="stMetric"]:hover {
+    border-color: #93c5fd !important;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    transform: translateY(-1px) !important;
+}
+/* Top accent bar — gradient blue stripe */
+[data-testid="stMetric"]::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, #2563eb 0%, #60a5fa 50%, #93c5fd 100%) !important;
+    border-radius: 0 !important;
+}
+[data-testid="stMetricLabel"] {
+    font-size: 0.8125rem !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 2px !important;
+}
+[data-testid="stMetricValue"] {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.2 !important;
+    margin-top: 4px !important;
+}
+[data-testid="stMetricDelta"] {
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+    margin-top: 2px !important;
+}
+
+/* === 6. TABS === */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px !important;
+    background: #f1f5f9 !important;
+    border-radius: 12px !important;
+    padding: 5px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+.stTabs [data-baseweb="tab"] {
+    border-radius: 9px !important;
+    padding: 9px 18px !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.18s ease !important;
+    border: none !important;
+    min-height: 40px !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #1e293b !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+.stTabs [aria-selected="true"] {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(37, 99, 235, 0.08) !important;
+}
+/* Remove default tab underline */
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+.stTabs [data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+/* === 7. BUTTONS === */
+.stButton > button[kind="primary"],
+.stButton > button[data-testid="stBaseButton-primary"] {
+    background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-weight: 700 !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3), 0 1px 2px rgba(37, 99, 235, 0.1) !important;
+    transition: all 0.15s ease !important;
+    min-height: 44px !important;
+}
+.stButton > button[kind="primary"]:hover,
+.stButton > button[data-testid="stBaseButton-primary"]:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35), 0 2px 4px rgba(37, 99, 235, 0.15) !important;
+    transform: translateY(-1px) !important;
+}
+.stButton > button[kind="primary"]:active,
+.stButton > button[data-testid="stBaseButton-primary"]:active {
+    transform: translateY(0px) !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2) !important;
+}
+.stButton > button[kind="secondary"],
+.stButton > button[data-testid="stBaseButton-secondary"],
+.stButton > button:not([kind]) {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.15s ease !important;
+    min-height: 44px !important;
+}
+.stButton > button[kind="secondary"]:hover,
+.stButton > button[data-testid="stBaseButton-secondary"]:hover,
+.stButton > button:not([kind]):hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* === 8. PILLS (st.pills) === */
+[data-testid="stPills"] button {
+    border-radius: 999px !important;
+    padding: 7px 16px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border: 1.5px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    transition: all 0.18s ease !important;
+    min-height: 38px !important;
+}
+[data-testid="stPills"] button:hover {
+    border-color: #93c5fd !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.1) !important;
+}
+[data-testid="stPills"] button[aria-pressed="true"],
+[data-testid="stPills"] button[aria-checked="true"] {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+    border-color: #1d4ed8 !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* === 9. SELECT / MULTISELECT / INPUTS === */
+[data-baseweb="select"] {
+    border-radius: 10px !important;
+}
+[data-baseweb="select"] > div {
+    border-radius: 10px !important;
+    border-color: #d1d5db !important;
+    background: #ffffff !important;
+    min-height: 42px !important;
+    transition: border-color 0.15s ease !important;
+}
+[data-baseweb="select"] > div:hover {
+    border-color: #93c5fd !important;
+}
+[data-baseweb="select"] > div:focus-within {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+[data-baseweb="menu"] [role="option"]:hover {
+    background: #eff6ff !important;
+}
+[data-baseweb="tag"] {
+    background: #eff6ff !important;
+    border-radius: 6px !important;
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+
+/* === 10. EXPANDER === */
+[data-testid="stExpander"] {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    transition: border-color 0.15s ease !important;
+}
+[data-testid="stExpander"]:hover {
+    border-color: #cbd5e1 !important;
+}
+[data-testid="stExpander"] summary {
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    color: #1e293b !important;
+    padding: 12px 16px !important;
+}
+[data-testid="stExpander"] summary:hover {
+    background: #f8fafc !important;
+}
+
+/* === 11. DATA FRAMES === */
+[data-testid="stDataFrame"] {
+    width: 100% !important;
+    overflow-x: auto !important;
+    border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* === 12. HERO SECTION === */
+.hero-section {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 40%, #f8fafc 100%) !important;
+    border-radius: 20px !important;
+    padding: 44px 40px !important;
+    margin-bottom: 28px !important;
+    border: 1px solid #dbeafe !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.06) !important;
+}
+.hero-section::after {
+    content: "" !important;
+    position: absolute !important;
+    top: -40px !important;
+    right: -40px !important;
+    width: 160px !important;
+    height: 160px !important;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%) !important;
+    border-radius: 50% !important;
+}
+.hero-section h1 {
+    font-size: 2rem !important;
+    font-weight: 900 !important;
+    margin-bottom: 8px !important;
+    letter-spacing: -0.03em !important;
+    color: #0f172a !important;
+}
+.hero-section p {
+    color: #475569 !important;
+    font-size: 1rem !important;
+    margin: 0 !important;
+    line-height: 1.6 !important;
+}
+
+/* === 13. FEATURE CARDS === */
+.feature-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 22px !important;
+    margin-bottom: 12px !important;
+    transition: all 0.2s ease !important;
+}
+.feature-card:hover {
+    border-color: #93c5fd !important;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08) !important;
+    transform: translateY(-1px) !important;
+}
+.feature-card h4 {
+    color: #2563eb !important;
+    margin-bottom: 8px !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+}
+.feature-card p {
+    color: #475569 !important;
+    font-size: 0.875rem !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+}
+.feature-card .card-number {
+    display: inline-block !important;
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    font-weight: 800 !important;
+    font-size: 0.75rem !important;
+    padding: 3px 10px !important;
+    border-radius: 6px !important;
+    margin-bottom: 8px !important;
+}
+
+/* === 14. CHART CONTAINER === */
+[data-testid="stPlotlyChart"] {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+[data-testid="stPlotlyChart"],
+[data-testid="stPlotlyChart"] .js-plotly-plot,
+[data-testid="stPlotlyChart"] .plotly,
+[data-testid="stPlotlyChart"] .nsewdrag,
+[data-testid="stPlotlyChart"] .drag {
+    touch-action: pan-y !important;
+}
+@media (pointer: coarse) {
+    [data-testid="stPlotlyChart"] .nsewdrag,
+    [data-testid="stPlotlyChart"] .draglayer,
+    [data-testid="stPlotlyChart"] .drag,
+    [data-testid="stPlotlyChart"] .draglayer .drag {
+        pointer-events: none !important;
+        touch-action: pan-y !important;
+    }
+    [data-testid="stPlotlyChart"] .js-plotly-plot,
+    [data-testid="stPlotlyChart"] .svg-container {
+        touch-action: pan-y !important;
+    }
+}
+
+/* === 15. CHECKBOX / TOGGLE === */
+[data-testid="stCheckbox"] label {
+    font-size: 0.8125rem !important;
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* === 16. RESPONSIVE — TABLET (641-1024px) === */
+@media (max-width: 1024px) {
+    .block-container {
+        padding: 1.25rem 1.75rem !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.3rem !important;
+    }
+}
+
+/* === 17. RESPONSIVE — MOBILE (max 640px) === */
+@media (max-width: 640px) {
+    html, body, [data-testid="stAppViewContainer"] {
+        font-size: 15.5px !important;
+    }
+    .block-container {
+        padding: 0.875rem 1rem !important;
+    }
+
+    /* Typography: 여전히 읽기 좋게 — 최소 0.8125rem(13px) 바닥 */
+    h1 { font-size: 1.5rem !important; font-weight: 900 !important; margin-bottom: 0.3rem !important; }
+    h2 { font-size: 1.25rem !important; font-weight: 800 !important; margin-top: 1.25rem !important; }
+    h3 { font-size: 1.0625rem !important; }
+    h4 { font-size: 1rem !important; }
+    p, li, span, .stMarkdown { font-size: 0.875rem !important; }
+    label { font-size: 0.8125rem !important; }
+
+    /* KPI cards: 2-column forced grid */
+    [data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    [data-testid="stColumn"] {
+        flex: 0 0 calc(50% - 5px) !important;
+        max-width: calc(50% - 5px) !important;
+    }
+    [data-testid="stMetric"] {
+        padding: 14px 14px 12px !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stMetricValue"] { font-size: 1.25rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.8125rem !important; }
+    [data-testid="stMetricDelta"] { font-size: 0.8125rem !important; }
+
+    /* Tabs: compact but readable */
+    .stTabs [data-baseweb="tab-list"] { gap: 3px !important; padding: 4px !important; }
+    .stTabs [data-baseweb="tab"] {
+        padding: 8px 12px !important;
+        font-size: 0.8125rem !important;
+        min-height: 38px !important;
+    }
+
+    /* Buttons: 44px min touch target */
+    .stButton > button {
+        min-height: 44px !important;
+        font-size: 0.875rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Pills: touchable — 최소 36px */
+    [data-testid="stPills"] button {
+        padding: 6px 12px !important;
+        font-size: 0.8125rem !important;
+        min-height: 36px !important;
+    }
+
+    /* Selectbox: touch-friendly height */
+    [data-baseweb="select"] > div { min-height: 42px !important; }
+
+    /* Hero section: tighter but still has presence */
+    .hero-section { padding: 24px 18px !important; margin-bottom: 16px !important; }
+    .hero-section h1 { font-size: 1.5rem !important; }
+    .hero-section p { font-size: 0.875rem !important; }
+
+    /* Feature cards: compact */
+    .feature-card { padding: 16px !important; margin-bottom: 10px !important; }
+    .feature-card h4 { font-size: 0.9375rem !important; }
+    .feature-card p { font-size: 0.8125rem !important; }
+
+    /* Dataframe: readable */
+    [data-testid="stDataFrame"] th { font-size: 0.75rem !important; }
+    [data-testid="stDataFrame"] td { font-size: 0.8125rem !important; }
+
+    /* Divider: tighter */
+    hr { margin: 1.25rem 0 !important; }
+
+    /* Expander: compact */
+    [data-testid="stExpander"] summary {
+        padding: 12px 14px !important;
+        font-size: 0.875rem !important;
+    }
+
+    /* Caption */
+    [data-testid="stCaptionContainer"] p { font-size: 0.8125rem !important; }
+}
+
+/* === 18. SMALL PHONE (max 375px, iPhone SE / Galaxy S mini) === */
+@media (max-width: 375px) {
+    .block-container { padding: 0.75rem 0.75rem !important; }
+    h1 { font-size: 1.35rem !important; }
+    h2 { font-size: 1.15rem !important; }
+    [data-testid="stMetricValue"] { font-size: 1.125rem !important; }
+    [data-testid="stMetricLabel"] { font-size: 0.8125rem !important; }
+    .stTabs [data-baseweb="tab"] {
+        padding: 7px 9px !important;
+        font-size: 0.8125rem !important;
+    }
+    [data-testid="stPills"] button {
+        padding: 5px 10px !important;
+        font-size: 0.8125rem !important;
+    }
+}

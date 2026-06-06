@@ -13,19 +13,26 @@ from sidebar_filters import _build_year_options
 
 st.markdown("""
 <style>
-.onboard-title { text-align: center; padding: 12px 0 8px 0; }
-.onboard-title h1 { font-size: 1.6rem !important; font-weight: 800 !important;
-    color: #2563eb !important; margin-bottom: 2px; }
-.onboard-title p { color: #64748b; font-size: 0.85rem; }
-.step-label { font-size: 0.72rem; font-weight: 700; color: #2563eb;
-    letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
-.summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
-    padding: 16px; margin: 8px 0; text-align: center; }
-.summary-box .val { font-size: 1rem; font-weight: 700; color: #1e293b; }
-.summary-box .label { font-size: 0.72rem; color: #64748b; }
+.onboard-title { text-align: center; padding: 24px 0 14px 0; }
+.onboard-title h1 { font-size: 2rem !important; font-weight: 900 !important;
+    color: #1d4ed8 !important; margin-bottom: 6px; letter-spacing: -0.03em; }
+.onboard-title p { color: #475569; font-size: 1rem; line-height: 1.55; }
+.step-label { font-size: 0.8125rem; font-weight: 800; color: #2563eb;
+    letter-spacing: 0.08em; margin-bottom: 10px; text-transform: uppercase; }
+.summary-box { background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe; border-radius: 16px;
+    padding: 24px 20px; margin: 12px 0; text-align: center;
+    box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06); }
+.summary-box .val { font-size: 1.1875rem; font-weight: 900; color: #0f172a;
+    letter-spacing: -0.02em; }
+.summary-box .label { font-size: 0.875rem; color: #64748b; margin-top: 6px; }
 @media (max-width: 640px) {
-    .onboard-title h1 { font-size: 1.4rem !important; }
-    .onboard-title p { font-size: 0.78rem; }
+    .onboard-title h1 { font-size: 1.625rem !important; }
+    .onboard-title p { font-size: 0.9375rem; }
+    .step-label { font-size: 0.8125rem; }
+    .summary-box { padding: 18px 16px; }
+    .summary-box .val { font-size: 1.0625rem; }
+    .summary-box .label { font-size: 0.8125rem; }
 }
 </style>
 """, unsafe_allow_html=True)

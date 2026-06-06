@@ -595,12 +595,18 @@ def calc_contract_type_ratio(rent_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["gu_name", "new_count", "renewal_count", "total", "renewal_pct"])
 
     df = rent_df.copy()
-    df["contract_type"] = df["contract_type"].astype(str).str.strip()
+    df["contract_type"] = df["contract_type"].fillna("").astype(str).str.strip()
 
-    # 신규/갱신 구분
-    df["ct_category"] = df["contract_type"].apply(
-        lambda x: "갱신" if "갱신" in x else ("신규" if "신규" in x else "기타")
-    )
+    # 신규/갱신 구분 (널/비문자열 안전)
+    def _ct_category(x) -> str:
+        s = x if isinstance(x, str) else ""
+        if "갱신" in s:
+            return "갱신"
+        if "신규" in s:
+            return "신규"
+        return "기타"
+
+    df["ct_category"] = df["contract_type"].map(_ct_category)
     df = df[df["ct_category"].isin(["신규", "갱신"])]
 
     if df.empty:
@@ -668,10 +674,10 @@ def calc_direct_trade_ratio(trade_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["gu_name", "direct_count", "broker_count", "total", "direct_pct"])
 
     df = trade_df.copy()
-    df["trade_type"] = df["trade_type"].astype(str).str.strip()
+    df["trade_type"] = df["trade_type"].fillna("").astype(str).str.strip()
 
-    df["tt_category"] = df["trade_type"].apply(
-        lambda x: "직거래" if "직거래" in x else "중개거래"
+    df["tt_category"] = df["trade_type"].map(
+        lambda x: "직거래" if isinstance(x, str) and "직거래" in x else "중개거래"
     )
 
     pivot = df.groupby(["gu_name", "tt_category"]).size().unstack(fill_value=0).reset_index()

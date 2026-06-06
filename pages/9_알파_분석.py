@@ -43,7 +43,7 @@ st.markdown("""
 알파가 양수면 시장보다 잘한 것, 음수면 시장보다 못한 것입니다.
 """)
 
-from config import DEFAULT_GUS, DEFAULT_START_YM
+from app_defaults import DEFAULT_GUS, DEFAULT_START_YM
 from data_pipeline import analysis_window, last_complete_ym
 
 selected_gus = st.session_state.get("selected_gus", list(DEFAULT_GUS))

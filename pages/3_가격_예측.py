@@ -3,7 +3,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config import SEOUL_GU_CODES, DEFAULT_START_YM
+from config import SEOUL_GU_CODES
+from app_defaults import DEFAULT_START_YM
 from data_collector import collect_seoul_data
 from data_processor import clean_trade_data
 from data_pipeline import analysis_window, last_complete_ym

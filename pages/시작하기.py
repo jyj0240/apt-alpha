@@ -7,7 +7,8 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
-from config import SEOUL_GU_CODES, AREA_CATEGORIES, DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
+from config import SEOUL_GU_CODES, AREA_CATEGORIES
+from app_defaults import DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
 from sidebar_filters import _build_year_options
 
 st.markdown("""

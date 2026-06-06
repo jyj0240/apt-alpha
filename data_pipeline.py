@@ -20,7 +20,8 @@ from datetime import datetime, timedelta
 
 import streamlit as st
 
-from config import GU_NAME_TO_CODE, DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
+from config import GU_NAME_TO_CODE
+from app_defaults import DEFAULT_GUS, DEFAULT_AREA, DEFAULT_START_YM
 from data_collector import collect_seoul_data, collect_seoul_rent_data
 from data_processor import (
     clean_trade_data,

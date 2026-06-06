@@ -23,7 +23,7 @@ from design_system import (
 from sidebar_filters import render_sidebar_filters
 from watchlist import load_watchlist, add_to_watchlist, remove_from_watchlist, key_of
 from comp_mapping import comparable_dongs, cluster_for, find_comparables_across
-from config import DEFAULT_GUS
+from app_defaults import DEFAULT_GUS
 
 render_sidebar_filters()
 

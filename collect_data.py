@@ -20,7 +20,8 @@ from datetime import datetime
 # 프로젝트 루트를 path에 추가
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import SEOUL_GU_CODES, GU_NAME_TO_CODE, DEFAULT_GUS, DEFAULT_START_YM
+from config import SEOUL_GU_CODES, GU_NAME_TO_CODE
+from app_defaults import DEFAULT_GUS, DEFAULT_START_YM
 from data_collector import collect_seoul_data, collect_seoul_rent_data, get_cache_status
 
 
